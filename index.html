@@ -9,104 +9,300 @@
 
     body {
       margin: 0;
-      padding: 16px;
-      color: #111;
-      font-family: Arial, "Malgun Gothic", sans-serif;
+      padding: 12px;
       background: #fff;
+      color: #000;
+      font-family: "Malgun Gothic", Arial, sans-serif;
+      font-size: 15px;
     }
 
-    .sheet {
-      display: grid;
-      grid-template-columns: minmax(680px, 1fr) 370px;
-      gap: 24px;
-      max-width: 1900px;
-      margin: 0 auto;
-      align-items: start;
-    }
-
-    .main {
-      min-width: 0;
-    }
-
-    .topline {
-      display: grid;
-      grid-template-columns: 1fr 1fr 110px;
-      text-align: center;
-      border: 1px solid #111;
-      margin-bottom: 10px;
-    }
-
-    .topline > div {
-      padding: 7px;
-      border-right: 1px solid #111;
-    }
-
-    .topline > div:last-child { border-right: 0; }
-
-    .legend {
-      display: grid;
-      grid-template-columns: 110px 1fr;
-      width: 260px;
-      margin: 0 0 12px auto;
-      border: 1px solid #111;
-      text-align: center;
-    }
-
-    .legend div { padding: 6px; }
-    .picket-bg { background: #f9dfd3; }
-    .class-bg { background: #d9efd2; }
-    .pink-bg { background: #f0c8ee; }
-
-    .day {
-      margin: 0 0 18px;
-      border: 1px solid #111;
-      page-break-inside: avoid;
+    .wrap {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      min-width: max-content;
     }
 
     table {
-      width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
     }
 
     th, td {
-      border: 1px solid #111;
-      padding: 5px 4px;
+      border: 1px solid #000;
+      padding: 4px 6px;
       text-align: center;
       vertical-align: middle;
       font-weight: normal;
-      line-height: 1.45;
-      overflow-wrap: anywhere;
+      line-height: 1.5;
+      white-space: pre-line;
+      height: 29px;
     }
 
-    .day-name { font-weight: bold; }
-    .label { width: 105px; }
-    .time { white-space: nowrap; font-size: 13px; }
-    .place { min-height: 42px; }
-    .staff-label { width: 105px; }
-    .picket { background: #f9dfd3; }
-    .classroom { background: #d9efd2; }
-    .empty { background: #fff; }
+    /* 왼쪽 영역 */
+    .left { width: 416px; }
+    .left table { width: 100%; }
+    .period td:first-child { width: 205px; }
 
-    .aside {
-      border: 1px solid #111;
+    .mic-title {
+      background: #efd0ee;
+      height: 58px;
+    }
+    .gap td { border: 0; height: 29px; }
+    .mic-people { height: auto; min-height: 29px; }
+
+    /* 범례 */
+    .legend { width: 112px; }
+    .legend table { width: 100%; }
+    .legend .picket { background: #fbe0d4; }
+    .legend .class  { background: #daf0d4; }
+
+    /* 요일 표 */
+    .schedules { display: flex; flex-direction: column; gap: 28px; }
+
+    .day-table { border: 2px solid #000; }
+    .day-table col.label { width: 116px; }
+    .day-table col.slot  { width: 160px; }
+    .day-table th.time-label { text-align: left; }
+    .day-table .place { height: 58px; }
+    .day-table .staff-label { width: 116px; }
+
+    td.picket { background: #fbe0d4; }
+    td.class  { background: #daf0d4; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- 왼쪽: 기간 + 야외 마이크 유세 -->
+    <div class="left">
+      <table class="period">
+        <tr>
+          <td>선거운동기간</td>
+          <td>11/9(월)~11/23(월)</td>
+        </tr>
+      </table>
+
+      <div style="height:29px"></div>
+
+      <table id="mic"></table>
+    </div>
+
+    <!-- 범례 -->
+    <div class="legend">
+      <table>
+        <tr><td class="picket">피켓 유세</td></tr>
+        <tr><td class="class">강의실 유세</td></tr>
+      </table>
+    </div>
+
+    <!-- 요일별 시간표 -->
+    <div class="schedules" id="schedules"></div>
+  </div>
+
+  <script>
+    /* ---------- 야외 마이크 유세 ---------- */
+    const mic = [
+      {
+        when: "11/10(화) 13:00~13:10",
+        where: "제2사범관 앞",
+        people: "지영, 수연, 지민, 재윤, 찬영, 승훈, 민경"
+      },
+      {
+        when: "11/18(수) 16:40~16:50",
+        where: "제1사범관 앞",
+        people: "지영, 수연, 지민, 시현, 재윤, 은지, 금비, 서영,\n유비, 주현, 찬영, 민경"
+      },
+      {
+        when: "11/23(월) 13:00~13:10",
+        where: "제1사범관 앞",
+        people: "지영, 수연, 지민, 시현, 재윤, 은지, 금비, 서영,\n유비, 주현, 승훈, 민경, 지호"
+      }
+    ];
+
+    /* ---------- 요일별 데이터 ----------
+       places : 날짜별 장소 (열 순서 = times 순서)
+       staff  : 실무 인원 "행" 단위 (열 순서 = times 순서)
+    */
+    const days = [
+      {
+        name: "월",
+        times: ["8:30~8:40", "8:40~8:50", "8:50~9:00",
+                "12:30~12:40", "12:40~12:50", "12:50~13:00"],
+        places: [
+          ["11/9", [
+            "-",
+            "화학교재 및 연구법\n606-221",
+            "국문학원전이해\n701-305",
+            "배드민턴(경기전략과지도법)\n706-106",
+            "중급한국무용의이론과실제\n706-103",
+            "체조(마루운동)\n511-101"
+          ]],
+          ["11/16", [
+            "-",
+            "-",
+            "영어작문연습\n701-102",
+            "-", "-", "-"
+          ]]
+        ],
+        staff: [
+          ["지영", "지영", "지영", "지영", "지영", "지영"],
+          ["수연", "수연", "수연", "지민", "지민", "지민"],
+          ["지민", "지민", "지민", "주현", "주현", "주현"],
+          ["찬영", "찬영", "찬영", "서영", "서영", "서영"],
+          ["시현", "시현", "시현", "재윤", "재윤", "재윤"],
+          ["",     "",     "",     "",     "",     "수연"]
+        ]
+      },
+      {
+        name: "화",
+        times: ["8:30~8:40", "8:40~8:50", "8:50~9:00",
+                "9:30~9:40", "9:40~9:50",
+                "14:30~14:40", "14:40~14:50"],
+        places: [
+          ["11/10", [
+            "-",
+            "응용영어음운론\n701-102",
+            "기하학일반및지도\n607-109",
+            "-", "-",
+            "교육철학및교육사\n206-11301-1",
+            "교육학개론\n206-11301-2"
+          ]],
+          ["11/17", [
+            "416 피켓",
+            "면역학\n416-109",
+            "-", "-", "-",
+            "특수교육학개론\n422-411",
+            "관광여가지리학\n417-510"
+          ]]
+        ],
+        staff: [
+          ["지영", "지영", "지영", "-",    "-",    "지영", "지영"],
+          ["수연", "수연", "수연", "수연", "수연", "지민", "지민"],
+          ["지호", "지호", "지호", "지호", "지호", "찬영", "찬영"],
+          ["민경", "민경", "민경", "민경", "민경", "윤서", "윤서"],
+          ["주현", "주현", "주현", "주현", "주현", "주현", "주현"]
+        ]
+      },
+      {
+        name: "수",
+        times: ["8:30~8:40", "8:40~8:50", "8:50~9:00",
+                "10:00~10:10", "10:10~10:20",
+                "12:50~13:00", "13:00~13:10", "13:10~13:20"],
+        places: [
+          ["11/11", [
+            "701 피켓",
+            "영어교육문법\n701-105",
+            "일반화학\n606-209",
+            "의사소통장애학생교육\n422-409",
+            "동양한국윤리입문\n417-303",
+            "-", "-",
+            "아동건강교육\n211-303"
+          ]],
+          ["11/18", [
+            "-",
+            "309 피켓",
+            "일반물리학\n309-403",
+            "동아시아근세사교육\n418-204",
+            "서양사입문 417-407",
+            "-", "-", "-"
+          ]]
+        ],
+        staff: [
+          ["지영", "지영", "지영", "지영", "지영", "지영", "지영", "지영"],
+          ["지민", "지민", "지민", "승훈", "승훈", "수연", "수연", "수연"],
+          ["하원", "하원", "하원", "하원", "하원", "지민", "지민", "지민"],
+          ["찬영", "찬영", "찬영", "찬영", "찬영", "유비", "유비", "유비"],
+          ["승훈", "승훈", "승훈", "금비", "금비", "은지", "은지", "은지"]
+        ]
+      },
+      {
+        name: "목",
+        times: ["8:30~8:40", "8:40~8:50", "8:50~9:00",
+                "12:20~12:30", "12:30~12:40", "12:40~12:50"],
+        places: [
+          ["11/12", [
+            "701 피켓",
+            "독서교육론\n701-303",
+            "현대소설론\n701-302",
+            "-", "-", "-"
+          ]],
+          ["11/19", [
+            "422 피켓",
+            "특수교육교사론\n422-411",
+            "인구및자원지리학\n417-510",
+            "-", "-", "-"
+          ]]
+        ],
+        staff: [
+          ["지영", "지영", "지영", "지영", "지영", "지영"],
+          ["수연", "수연", "수연", "수연", "수연", "수연"],
+          ["윤서", "윤서", "윤서", "지민", "지민", "지민"],
+          ["승훈", "승훈", "승훈", "찬영", "찬영", "찬영"],
+          ["주현", "주현", "주현", "하원", "하원", "하원"]
+        ]
+      }
+    ];
+
+    /* ---------- 렌더링 ---------- */
+    function esc(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     }
 
-    .aside-title {
-      padding: 15px 8px;
-      text-align: center;
-      background: #f0c8ee;
-      border-bottom: 1px solid #111;
-      font-size: 18px;
+    function placeClass(text) {
+      if (text.includes("피켓")) return "picket";
+      if (text.trim() === "-") return "";
+      return "class";
     }
 
-    .event {
-      border-bottom: 1px solid #111;
-      text-align: center;
+    function renderMic() {
+      let html = `<tr><td class="mic-title" colspan="2">야외 마이크 유세</td></tr>`;
+
+      mic.forEach((item, i) => {
+        html += `
+          <tr>
+            <td style="width:205px">${esc(item.when)}</td>
+            <td>${esc(item.where)}</td>
+          </tr>
+          <tr>
+            <td class="mic-people" colspan="2">${esc(item.people)}</td>
+          </tr>
+        `;
+        if (i < mic.length - 1) {
+          html += `<tr class="gap"><td colspan="2"></td></tr>`;
+        }
+      });
+
+      document.getElementById("mic").innerHTML = html;
     }
 
-    .event:last-child { border-bottom: 0; }
+    function renderDay(day) {
+      const n = day.times.length;
+      const staffRows = day.staff.length;
 
-    .event-head {
-      display: grid;
-      grid-template-columns:
+      let html = `<table class="day-table">
+        <colgroup>
+          <col class="label">
+          ${day.times.map(() => `<col class="slot">`).join("")}
+        </colgroup>
+        <tr>
+          <td>요일</td>
+          <td colspan="${n}">${esc(day.name)}</td>
+        </tr>
+        <tr>
+          <td class="time-label">시간</td>
+          ${day.times.map(t => `<td>${esc(t)}</td>`).join("")}
+        </tr>
+      `;
+
+      day.places.forEach(([date, list]) => {
+        html += `<tr>
+          <td class="place">${esc(date)} 장소</td>
+          ${list.map(p => `<td class="place ${placeClass(p)}">${esc(p)}</td>`).join("")}
+        </tr>`;
+      });
+
+      day.staff.forEach((row, r) => {
+        html += `
