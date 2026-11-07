@@ -52,13 +52,11 @@
 
 <script>
 const rep=(n,s)=>Array(n).fill(s);
-/* X(평소 이름, {날짜:바뀌는 이름}) : 특정 날짜만 사람이 바뀌는 칸 */
 const X=(n,ex)=>({n:n,ex:ex});
 const base=c=>typeof c==='string'?c:c.n;
 const onDate=(c,dt)=>typeof c==='string'?c:((c.ex&&c.ex[dt])||c.n);
 const allOf=c=>typeof c==='string'?[c]:[c.n,...Object.values(c.ex||{})];
 
-/* y : 시간 칸별 색 (p=피켓, l=강의실) */
 const DAYS=[
  {d:'월',dates:['11/9','11/16','11/23'],
   t:['8:30~8:40','8:40~8:50','8:50~9:00','12:30~12:40','12:40~12:50','12:50~13:00'],
@@ -137,6 +135,7 @@ function tableHTML(day){
   let h='<div class="day"><h2>'+day.d+'요일 <small>'+day.dates.join(' · ')+'</small></h2><div class="wrap"><table><thead><tr><th>시간</th>';
   day.t.forEach((t,i)=>{h+='<th class="'+day.y[i]+'">'+t+'</th>';});
   h+='</tr></thead><tbody>';
+
   day.rows.forEach((row,ri)=>{
     h+='<tr>';
     if(ri===0) h+='<th class="side" rowspan="'+day.rows.length+'">실무 인원</th>';
@@ -150,39 +149,57 @@ function tableHTML(day){
     });
     h+='</tr>';
   });
+
   return h+'</tbody></table></div></div>';
 }
 
 function summaryHTML(){
   if(!who) return '';
+
   let total=0;
   let h='<div class="sum"><h3>'+who+' 님 일정</h3><ul>';
+
   DAYS.forEach(day=>{
     const groups={};
+
     day.t.forEach((t,i)=>{
-      const ds=day.dates.filter(dt=>day.rows.some(r=>onDate(r[i],dt)===who));
+      const ds=day.dates.filter(dt=>
+        day.rows.some(r=>onDate(r[i],dt)===who)
+      );
+
       if(ds.length){
         total+=ds.length;
-        const k=ds.join(',');
-        if(!groups[k]) groups[k]={ds:ds,items:[]};
-        groups[k].items.push(t+(day.y[i]==='p'?' (피켓)':' (강의실)'));
+        const key=ds.join(',');
+        if(!groups[key]) groups[key]={dates:ds,items:[]};
+        groups[key].items.push(
+          t+(day.y[i]==='p'?' (피켓)':' (강의실)')
+        );
       }
     });
-    Object.values(groups).forEach(g=>{
-      const tag=g.ds.length===day.dates.length?'':' <span class="dt">['+g.ds.join(', ')+']</span>';
-      h+='<li><b>'+day.d+'요일</b>'+tag+' '+g.items.join(', ')+'</li>';
+
+    Object.values(groups).forEach(group=>{
+      const dateTag=group.dates.length===day.dates.length
+        ? ''
+        : ' <span class="dt">['+group.dates.join(', ')+']</span>';
+
+      h+='<li><b>'+day.d+'요일</b>'+dateTag+' '+group.items.join(', ')+'</li>';
     });
   });
+
   MIC.forEach(m=>{
-    if(m.n.includes(who)) h+='<li><b>야외 마이크</b> '+m.date+' '+m.time+' '+m.place+'</li>';
+    if(m.n.includes(who)){
+      h+='<li><b>야외 마이크</b> '+m.date+' '+m.time+' '+m.place+'</li>';
+    }
   });
+
   return h+'</ul><p>요일별 유세 전체 기간 합계 '+total+'타임 (날짜별 변경 반영)</p></div>';
 }
 
 function micHTML(){
   let h='<h2>야외 마이크 유세</h2>';
   MIC.forEach(m=>{
-    h+='<div class="item'+(who&&m.n.includes(who)?' me':'')+'"><b>'+m.date+' '+m.time+' · '+m.place+'</b>'+
+    h+='<div class="item'+(who&&m.n.includes(who)?' me':'')+'"><b>'+
+       m.date+' '+m.time+' · '+m.place+'</b>'+
        m.n.map(n=>n===who?'<u>'+n+'</u>':n).join(', ')+'</div>';
   });
   return h;
@@ -191,23 +208,36 @@ function micHTML(){
 function render(){
   document.getElementById('chips').innerHTML=
     names.map(n=>'<button class="chip'+(n===who?' on':'')+'" data-n="'+n+'">'+n+'</button>').join('');
+
   document.getElementById('summary').innerHTML=summaryHTML();
+
   document.getElementById('tabs').innerHTML=
-    [...DAYS.map(d=>d.d),ALL].map(d=>'<button class="tab'+(d===cur?' on':'')+'" data-d="'+d+'">'+d+'</button>').join('');
+    [...DAYS.map(d=>d.d),ALL]
+      .map(d=>'<button class="tab'+(d===cur?' on':'')+'" data-d="'+d+'">'+d+'</button>')
+      .join('');
+
   document.getElementById('content').innerHTML=
     DAYS.filter(d=>cur===ALL||d.d===cur).map(tableHTML).join('');
+
   document.getElementById('mic').innerHTML=micHTML();
 }
 
 document.addEventListener('click',e=>{
-  const c=e.target.closest('.chip'), t=e.target.closest('.tab');
+  const c=e.target.closest('.chip');
+  const t=e.target.closest('.tab');
+
   if(c){
     who=(who===c.dataset.n)?'':c.dataset.n;
     try{localStorage.setItem('who',who);}catch(err){}
     render();
   }
-  if(t){cur=t.dataset.d;render();}
+
+  if(t){
+    cur=t.dataset.d;
+    render();
+  }
 });
+
 render();
 </script>
 </body>
