@@ -63,9 +63,26 @@
     }
 
     .result.show { display: block; }
-    .result h2 { margin: 0 0 10px; font-size: 18px; }
-    .result-day { margin-top: 14px; }
-    .result-day h3 { margin: 0 0 6px; font-size: 16px; }
+    .result h2 { margin: 0 0 12px; font-size: 18px; }
+
+    .weekday-section {
+      margin-top: 16px;
+    }
+
+    .weekday-title {
+      margin: 0 0 8px;
+      padding: 6px 8px;
+      background: #e9edf3;
+      font-size: 16px;
+    }
+
+    .date-section { margin: 10px 0 14px 10px; }
+
+    .date-title {
+      margin: 0 0 4px;
+      color: #111;
+      font-size: 15px;
+    }
 
     .result-item {
       padding: 7px 0;
@@ -73,13 +90,8 @@
       line-height: 1.6;
     }
 
-    /* 개인 일정의 날짜는 검은색 */
-    .result-date {
-      color: #111;
-      font-weight: bold;
-    }
-
     .day { margin: 22px 0 30px; }
+
     .day h2 {
       margin: 0;
       padding: 8px;
@@ -87,11 +99,14 @@
       background: #e9edf3;
     }
 
-    .table-wrap { overflow-x: auto; background: white; }
+    .table-wrap {
+      overflow-x: auto;
+      background: white;
+    }
 
     table {
       width: 100%;
-      min-width: 850px;
+      min-width: 900px;
       border-collapse: collapse;
     }
 
@@ -113,9 +128,14 @@
       outline-offset: -3px;
     }
 
-    .small { color: #555; font-size: 12px; }
+    .small {
+      margin-top: 5px;
+      color: #555;
+      font-size: 12px;
+    }
 
     .mic { margin-top: 28px; }
+
     .mic h2 {
       padding: 8px;
       text-align: center;
@@ -147,7 +167,7 @@
     <span class="classroom">강의실 유세</span>
   </div>
 
-  <p>이름을 누르면 본인 일정이 먼저 나오고, 아래에서 전체 표를 확인할 수 있어요.</p>
+  <p>이름을 누르면 본인 일정이 요일·날짜별로 시간순으로 표시됩니다.</p>
 
   <div class="people" id="people"></div>
   <section class="result" id="result"></section>
@@ -156,9 +176,15 @@
 
 <script>
 /*
-  장소와 실무 인원은 이미지 표 기준.
-  각 시간의 staff 배열 순서는 표에 적힌 위에서 아래 순서.
+  staff의 각 시간대 형식:
+  [
+    ["첫 번째 날짜 인원", ...],
+    ["두 번째 날짜 인원", ...]
+  ]
+
+  같은 인원이 두 날짜 모두 배정된 경우 양쪽 배열에 기록합니다.
 */
+
 const schedules = [
   {
     day: "월요일",
@@ -216,7 +242,7 @@ const schedules = [
       [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
       [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
       [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
-      [["지영","수연","지호","민경","주현"], ["","수연","지호","민경","주현"]],
+      [["","수연","지호","민경","주현"], ["","수연","지호","민경","주현"]],
       [["","수연","지호","민경","주현"], ["","수연","지호","민경","주현"]],
       [["지영","지민","찬영","윤서","주현"], ["지영","지민","찬영","윤서","주현"]],
       [["지영","지민","찬영","윤서","주현"], ["지영","지민","찬영","윤서","주현"]]
@@ -312,6 +338,7 @@ const microphones = [
 ];
 
 let selected = "";
+
 try {
   selected = localStorage.getItem("selectedPerson") || "";
 } catch (error) {}
@@ -339,13 +366,16 @@ function getPeople() {
     });
   });
 
-  microphones.forEach(item => item.people.forEach(name => people.add(name)));
+  microphones.forEach(item => {
+    item.people.forEach(name => people.add(name));
+  });
+
   return [...people].sort((a, b) => a.localeCompare(b, "ko"));
 }
 
 function renderPeople() {
-  const names = getPeople();
   const container = document.getElementById("people");
+  const names = getPeople();
 
   container.innerHTML =
     `<button data-person="">전체</button>` +
@@ -368,6 +398,11 @@ function renderPeople() {
   });
 }
 
+function startMinutes(time) {
+  const match = time.match(/^(\d{1,2}):(\d{2})/);
+  return match ? Number(match[1]) * 60 + Number(match[2]) : 0;
+}
+
 function renderResult() {
   const box = document.getElementById("result");
 
@@ -378,50 +413,73 @@ function renderResult() {
   }
 
   let html = `<h2>${escapeHTML(selected)} 님 참여 일정</h2>`;
-  let found = false;
+  let hasAnySchedule = false;
 
   schedules.forEach(day => {
-    const items = [];
+    let weekdayHTML = "";
 
-    day.times.forEach((time, timeIndex) => {
-      day.dates.forEach((date, dateIndex) => {
+    day.dates.forEach((date, dateIndex) => {
+      const items = [];
+
+      day.times.forEach((time, timeIndex) => {
         const place = day.places[timeIndex][dateIndex];
-        const names = day.staff[timeIndex][dateIndex] || [];
+        const people = day.staff[timeIndex][dateIndex] || [];
 
-        // 그 날짜 장소가 '-'이면 개인 일정에 표시하지 않음
-        if (!place || place === "-" || !names.includes(selected)) return;
+        // 그 날짜 장소가 없거나 '-'이면 개인 일정에서 제외
+        if (!place || place === "-" || !people.includes(selected)) return;
 
-        items.push(
-          `<div class="result-item">
-            <span class="result-date">${escapeHTML(date)} (${escapeHTML(day.day)})</span>
-            · ${escapeHTML(time)}
-            · ${escapeHTML(place).replace(/\n/g, " ")}
-          </div>`
-        );
-        found = true;
+        items.push({ time, place });
       });
+
+      items.sort((a, b) => startMinutes(a.time) - startMinutes(b.time));
+
+      if (items.length) {
+        hasAnySchedule = true;
+
+        weekdayHTML += `
+          <div class="date-section">
+            <h4 class="date-title">${escapeHTML(date)}</h4>
+            ${items.map(item => `
+              <div class="result-item">
+                ${escapeHTML(item.time)} ·
+                ${escapeHTML(item.place).replace(/\n/g, " ")}
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
     });
 
-    if (items.length) {
-      html += `<div class="result-day"><h3>${escapeHTML(day.day)}</h3>${items.join("")}</div>`;
+    if (weekdayHTML) {
+      html += `
+        <section class="weekday-section">
+          <h3 class="weekday-title">${escapeHTML(day.day)}</h3>
+          ${weekdayHTML}
+        </section>
+      `;
     }
   });
 
-  const micItems = microphones
-    .filter(item => item.people.includes(selected))
-    .map(item => {
-      found = true;
-      return `<div class="result-item">
-        <span class="result-date">${escapeHTML(item.date)}</span>
-        · 야외 마이크 유세 · ${escapeHTML(item.time)} · ${escapeHTML(item.place)}
-      </div>`;
-    });
+  const micItems = microphones.filter(item => item.people.includes(selected));
 
   if (micItems.length) {
-    html += `<div class="result-day"><h3>야외 마이크 유세</h3>${micItems.join("")}</div>`;
+    hasAnySchedule = true;
+    html += `
+      <section class="weekday-section">
+        <h3 class="weekday-title">야외 마이크 유세</h3>
+        ${micItems.map(item => `
+          <div class="result-item">
+            <strong>${escapeHTML(item.date)}</strong> ·
+            ${escapeHTML(item.time)} · ${escapeHTML(item.place)}
+          </div>
+        `).join("")}
+      </section>
+    `;
   }
 
-  if (!found) html += "<p>표에 표시된 일정이 없습니다.</p>";
+  if (!hasAnySchedule) {
+    html += "<p>표에 표시된 일정이 없습니다.</p>";
+  }
 
   box.className = "result show";
   box.innerHTML = html;
@@ -430,7 +488,7 @@ function renderResult() {
 function renderDay(day) {
   let html = `
     <section class="day">
-      <h2>${escapeHTML(day.day)} (${day.dates.join(" / ")})</h2>
+      <h2>${escapeHTML(day.day)} (${day.dates.map(escapeHTML).join(" / ")})</h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -439,40 +497,51 @@ function renderDay(day) {
               ${day.times.map(time => `<th>${escapeHTML(time)}</th>`).join("")}
             </tr>
             <tr>
-              <th>날짜·장소</th>
-              ${day.times.map((_, i) => {
-                const type = day.types[i] === "picket"
+              <th>${escapeHTML(day.dates[0])} 장소</th>
+              ${day.times.map((_, index) => {
+                const type = day.types[index] === "picket"
                   ? "picket-cell"
-                  : day.types[i] === "classroom"
+                  : day.types[index] === "classroom"
                     ? "classroom-cell"
                     : "";
 
-                return `<td class="${type}">
-                  ${escapeHTML(day.dates[0])}: ${escapeHTML(day.places[i][0])}<br>
-                  ${escapeHTML(day.dates[1])}: ${escapeHTML(day.places[i][1])}
-                </td>`;
+                return `<td class="${type}">${escapeHTML(day.places[index][0])}</td>`;
+              }).join("")}
+            </tr>
+            <tr>
+              <th>${escapeHTML(day.dates[1])} 장소</th>
+              ${day.times.map((_, index) => {
+                const type = day.types[index] === "picket"
+                  ? "picket-cell"
+                  : day.types[index] === "classroom"
+                    ? "classroom-cell"
+                    : "";
+
+                return `<td class="${type}">${escapeHTML(day.places[index][1])}</td>`;
               }).join("")}
             </tr>
           </thead>
           <tbody>`;
 
-  const rowCount = Math.max(
-    ...day.staff.flatMap(timeStaff => timeStaff.map(names => names.length))
+  const maxRows = Math.max(
+    ...day.staff.flatMap(timeStaff =>
+      timeStaff.map(dateStaff => dateStaff.length)
+    )
   );
 
-  for (let row = 0; row < rowCount; row++) {
+  for (let row = 0; row < maxRows; row++) {
     html += `<tr><th>실무 인원 ${row + 1}</th>`;
 
     day.staff.forEach(timeStaff => {
-      const firstDateName = timeStaff[0][row] || "—";
-      const secondDateName = timeStaff[1][row] || "—";
-      const isSelected =
-        selected &&
-        (firstDateName === selected || secondDateName === selected);
+      const first = timeStaff[0][row] || "—";
+      const second = timeStaff[1][row] || "—";
+      const isSelected = selected && (first === selected || second === selected);
 
-      html += `<td class="${isSelected ? "selected" : ""}">
-        ${escapeHTML(firstDateName)}<br>${escapeHTML(secondDateName)}
-      </td>`;
+      html += `
+        <td class="${isSelected ? "selected" : ""}">
+          ${escapeHTML(first)}<br>${escapeHTML(second)}
+        </td>
+      `;
     });
 
     html += "</tr>";
@@ -482,8 +551,11 @@ function renderDay(day) {
           </tbody>
         </table>
       </div>
-      <div class="small">각 인원 칸은 위에서부터 ${escapeHTML(day.dates[0])}, ${escapeHTML(day.dates[1])} 순서입니다.</div>
-    </section>`;
+      <div class="small">
+        인원 칸은 위에서부터 ${escapeHTML(day.dates[0])}, ${escapeHTML(day.dates[1])} 순서입니다.
+      </div>
+    </section>
+  `;
 
   return html;
 }
@@ -493,13 +565,20 @@ function renderMic() {
 
   microphones.forEach(item => {
     const isSelected = selected && item.people.includes(selected);
+
     html += `
       <div class="mic-item ${isSelected ? "selected" : ""}">
-        <strong>${escapeHTML(item.date)} ${escapeHTML(item.time)} · ${escapeHTML(item.place)}</strong><br>
+        <strong>
+          ${escapeHTML(item.date)} ${escapeHTML(item.time)} ·
+          ${escapeHTML(item.place)}
+        </strong><br>
         ${item.people.map(name =>
-          name === selected ? `<strong>${escapeHTML(name)}</strong>` : escapeHTML(name)
+          name === selected
+            ? `<strong>${escapeHTML(name)}</strong>`
+            : escapeHTML(name)
         ).join(", ")}
-      </div>`;
+      </div>
+    `;
   });
 
   document.getElementById("mic").innerHTML = html;
@@ -507,92 +586,13 @@ function renderMic() {
 
 function render() {
   renderPeople();
- function renderResult() {
-  const box = document.getElementById("result");
-
-  if (!selected) {
-    box.className = "result";
-    box.innerHTML = "";
-    return;
-  }
-
-  let html = `<h2>${escapeHTML(selected)} 님 참여 일정</h2>`;
-  let found = false;
-
-  // "8:30~8:40" 같은 시간의 시작 시각을 분 단위로 변환
-  function startMinutes(time) {
-    const match = time.match(/^(\d{1,2}):(\d{2})/);
-    return match ? Number(match[1]) * 60 + Number(match[2]) : 0;
-  }
-
-  schedules.forEach(day => {
-    const dateSections = [];
-
-    // 날짜를 먼저 나누고, 각 날짜 안에서 시간순으로 표시
-    day.dates.forEach((date, dateIndex) => {
-      const items = day.times
-        .map((time, timeIndex) => {
-          const place = day.places[timeIndex][dateIndex];
-          const names = day.staff[timeIndex][dateIndex] || [];
-
-          if (!place || place === "-" || !names.includes(selected)) {
-            return null;
-          }
-
-          return { time, place, timeIndex };
-        })
-        .filter(Boolean)
-        .sort((a, b) => startMinutes(a.time) - startMinutes(b.time));
-
-      if (!items.length) return;
-
-      found = true;
-      dateSections.push(`
-        <div class="result-day">
-          <h3 class="result-date">${escapeHTML(date)}</h3>
-          ${items.map(item => `
-            <div class="result-item">
-              ${escapeHTML(item.time)} ·
-              ${escapeHTML(item.place).replace(/\n/g, " ")}
-            </div>
-          `).join("")}
-        </div>
-      `);
-    });
-
-    if (dateSections.length) {
-      html += `
-        <section class="weekday-section">
-          <h3>${escapeHTML(day.day)}</h3>
-          ${dateSections.join("")}
-        </section>
-      `;
-    }
-  });
-
-  const micItems = microphones.filter(item =>
-    item.people.includes(selected)
-  );
-
-  if (micItems.length) {
-    found = true;
-    html += `
-      <div class="result-day">
-        <h3>야외 마이크 유세</h3>
-        ${micItems.map(item => `
-          <div class="result-item">
-            <span class="result-date">${escapeHTML(item.date)}</span> ·
-            ${escapeHTML(item.time)} · ${escapeHTML(item.place)}
-          </div>
-        `).join("")}
-      </div>
-    `;
-  }
-
-  if (!found) {
-    html += "<p>표에 표시된 일정이 없습니다.</p>";
-  }
-
-  box.className = "result show";
-  box.innerHTML = html;
+  renderResult();
+  document.getElementById("schedules").innerHTML =
+    schedules.map(renderDay).join("");
+  renderMic();
 }
+
+render();
+</script>
+</body>
+</html>
