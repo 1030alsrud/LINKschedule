@@ -507,16 +507,92 @@ function renderMic() {
 
 function render() {
   renderPeople();
-  renderResult();
+ function renderResult() {
+  const box = document.getElementById("result");
 
-  // 개인 일정 결과표 바로 아래에 전체 일정표 표시
-  document.getElementById("schedules").innerHTML =
-    schedules.map(renderDay).join("");
+  if (!selected) {
+    box.className = "result";
+    box.innerHTML = "";
+    return;
+  }
 
-  renderMic();
+  let html = `<h2>${escapeHTML(selected)} 님 참여 일정</h2>`;
+  let found = false;
+
+  // "8:30~8:40" 같은 시간의 시작 시각을 분 단위로 변환
+  function startMinutes(time) {
+    const match = time.match(/^(\d{1,2}):(\d{2})/);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : 0;
+  }
+
+  schedules.forEach(day => {
+    const dateSections = [];
+
+    // 날짜를 먼저 나누고, 각 날짜 안에서 시간순으로 표시
+    day.dates.forEach((date, dateIndex) => {
+      const items = day.times
+        .map((time, timeIndex) => {
+          const place = day.places[timeIndex][dateIndex];
+          const names = day.staff[timeIndex][dateIndex] || [];
+
+          if (!place || place === "-" || !names.includes(selected)) {
+            return null;
+          }
+
+          return { time, place, timeIndex };
+        })
+        .filter(Boolean)
+        .sort((a, b) => startMinutes(a.time) - startMinutes(b.time));
+
+      if (!items.length) return;
+
+      found = true;
+      dateSections.push(`
+        <div class="result-day">
+          <h3 class="result-date">${escapeHTML(date)}</h3>
+          ${items.map(item => `
+            <div class="result-item">
+              ${escapeHTML(item.time)} ·
+              ${escapeHTML(item.place).replace(/\n/g, " ")}
+            </div>
+          `).join("")}
+        </div>
+      `);
+    });
+
+    if (dateSections.length) {
+      html += `
+        <section class="weekday-section">
+          <h3>${escapeHTML(day.day)}</h3>
+          ${dateSections.join("")}
+        </section>
+      `;
+    }
+  });
+
+  const micItems = microphones.filter(item =>
+    item.people.includes(selected)
+  );
+
+  if (micItems.length) {
+    found = true;
+    html += `
+      <div class="result-day">
+        <h3>야외 마이크 유세</h3>
+        ${micItems.map(item => `
+          <div class="result-item">
+            <span class="result-date">${escapeHTML(item.date)}</span> ·
+            ${escapeHTML(item.time)} · ${escapeHTML(item.place)}
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  if (!found) {
+    html += "<p>표에 표시된 일정이 없습니다.</p>";
+  }
+
+  box.className = "result show";
+  box.innerHTML = html;
 }
-
-render();
-</script>
-</body>
-</html>
