@@ -31,7 +31,7 @@
   .sum h3{margin:0 0 6px;font-size:16px}
   .sum ul{margin:0;padding-left:18px;font-size:14px;line-height:1.7}
   .sum p{margin:6px 0 0;font-size:13px;color:#555}
-  .sum .dt{font-size:15px;font-weight:bold;color:#c0392b}
+  .sum .dt{font-size:16px;font-weight:bold;color:#e00000}
   .mic{margin-top:26px}
   .mic h2{background:#ecd0f0;margin:0;padding:6px;text-align:center;font-size:16px;border:1px solid #333}
   .mic .item{background:#fff;border:1px solid #333;border-top:0;padding:8px;font-size:14px;line-height:1.6}
@@ -158,16 +158,20 @@ function summaryHTML(){
   let total=0;
   let h='<div class="sum"><h3>'+who+' 님 일정</h3><ul>';
   DAYS.forEach(day=>{
-    const items=[];
+    const groups={};
     day.t.forEach((t,i)=>{
       const ds=day.dates.filter(dt=>day.rows.some(r=>onDate(r[i],dt)===who));
       if(ds.length){
         total+=ds.length;
-        const note=ds.length===day.dates.length?'':' <span class="dt">['+ds.join(', ')+'만]</span>';
-        items.push(t+(day.y[i]==='p'?' (피켓)':' (강의실)')+note);
+        const k=ds.join(',');
+        if(!groups[k]) groups[k]={ds:ds,items:[]};
+        groups[k].items.push(t+(day.y[i]==='p'?' (피켓)':' (강의실)'));
       }
     });
-    if(items.length) h+='<li><b>'+day.d+'요일</b> '+items.join(', ')+'</li>';
+    Object.values(groups).forEach(g=>{
+      const tag=g.ds.length===day.dates.length?'':' <span class="dt">['+g.ds.join(', ')+']</span>';
+      h+='<li><b>'+day.d+'요일</b>'+tag+' '+g.items.join(', ')+'</li>';
+    });
   });
   MIC.forEach(m=>{
     if(m.n.includes(who)) h+='<li><b>야외 마이크</b> '+m.date+' '+m.time+' '+m.place+'</li>';
