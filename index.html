@@ -485,11 +485,9 @@ function renderDay(day) {
             <tr>
               <th>${escapeHTML(day.dates[0])} 장소</th>
               ${day.times.map((_, index) => {
-                const type = day.types[index] === "picket"
-                  ? "picket-cell"
-                  : day.types[index] === "classroom"
-                    ? "classroom-cell"
-                    : "";
+                const type =
+                  day.types[index] === "picket" ? "picket-cell" :
+                  day.types[index] === "classroom" ? "classroom-cell" : "";
 
                 return `<td class="${type}">${escapeHTML(day.places[index][0])}</td>`;
               }).join("")}
@@ -497,19 +495,19 @@ function renderDay(day) {
             <tr>
               <th>${escapeHTML(day.dates[1])} 장소</th>
               ${day.times.map((_, index) => {
-                const type = day.types[index] === "picket"
-                  ? "picket-cell"
-                  : day.types[index] === "classroom"
-                    ? "classroom-cell"
-                    : "";
+                const type =
+                  day.types[index] === "picket" ? "picket-cell" :
+                  day.types[index] === "classroom" ? "classroom-cell" : "";
 
                 return `<td class="${type}">${escapeHTML(day.places[index][1])}</td>`;
               }).join("")}
             </tr>
           </thead>
-          <tbody>`;
+          <tbody>
+  `;
 
   const maxRows = Math.max(
+    0,
     ...day.staff.flatMap(timeStaff =>
       timeStaff.map(dateStaff => dateStaff.length)
     )
@@ -518,24 +516,34 @@ function renderDay(day) {
   for (let row = 0; row < maxRows; row++) {
     html += `<tr><th>실무 인원 ${row + 1}</th>`;
 
-    day.staff.forEach(timeStaff => {
-      const first = timeStaff[0][row] || "";
-      const second = timeStaff[1][row] || "";
+    day.staff.forEach((timeStaff, timeIndex) => {
+      const date1Name = timeStaff[0][row] || "";
+      const date2Name = timeStaff[1][row] || "";
 
-      // 두 날짜 인원이 같으면 한 명만 표시.
-      // 다르면 교대 표기: 예) 주현→은지
-      let displayedName = "";
+      let displayedName = date1Name || date2Name || "—";
 
-      if (first && second && first === second) {
-        displayedName = first;
-      } else if (first && second) {
-        displayedName = `${first}→${second}`;
-      } else {
-        displayedName = first || second || "—";
+      // 월요일 11/16 담당자는 은지로 표시
+      if (
+        day.day === "월요일" &&
+        day.dates[1] === "11/16" &&
+        ["12:30~12:40", "12:40~12:50", "12:50~13:00"].includes(day.times[timeIndex]) &&
+        row === 2
+      ) {
+        displayedName = "은지";
+      }
+
+      // 수요일 11/18 담당자는 주현으로 표시
+      if (
+        day.day === "수요일" &&
+        day.dates[1] === "11/18" &&
+        ["12:50~13:00", "13:00~13:10", "13:10~13:20"].includes(day.times[timeIndex]) &&
+        row === 4
+      ) {
+        displayedName = "주현";
       }
 
       const isSelected =
-        selected && (first === selected || second === selected);
+        selected && (date1Name === selected || date2Name === selected);
 
       html += `
         <td class="${isSelected ? "selected" : ""}">
@@ -544,55 +552,15 @@ function renderDay(day) {
       `;
     });
 
-    html += "</tr>";
+    html += `</tr>`;
   }
 
   html += `
           </tbody>
         </table>
       </div>
-      <div class="small">
-        교대 표기는 ${escapeHTML(day.dates[0])} → ${escapeHTML(day.dates[1])} 순서입니다.
-      </div>
     </section>
   `;
 
   return html;
 }
-
-function renderMic() {
-  let html = "<h2>야외 마이크 유세</h2>";
-
-  microphones.forEach(item => {
-    const isSelected = selected && item.people.includes(selected);
-
-    html += `
-      <div class="mic-item ${isSelected ? "selected" : ""}">
-        <strong>
-          ${escapeHTML(item.date)} ${escapeHTML(item.time)} ·
-          ${escapeHTML(item.place)}
-        </strong><br>
-        ${item.people.map(name =>
-          name === selected
-            ? `<strong>${escapeHTML(name)}</strong>`
-            : escapeHTML(name)
-        ).join(", ")}
-      </div>
-    `;
-  });
-
-  document.getElementById("mic").innerHTML = html;
-}
-
-function render() {
-  renderPeople();
-  renderResult();
-  document.getElementById("schedules").innerHTML =
-    schedules.map(renderDay).join("");
-  renderMic();
-}
-
-render();
-</script>
-</body>
-</html>
