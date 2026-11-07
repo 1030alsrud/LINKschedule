@@ -1,338 +1,283 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>선거운동기간 시간표</title>
+<title>선거운동 일정 조회 (11/9 ~ 11/23)</title>
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 12px; background: #fff; color: #000;
-    font-family: "Malgun Gothic", Arial, sans-serif; font-size: 15px;
+  :root{
+    --picket:#fce4d6; --lecture:#d9f2d0; --mic:#f0d0f0;
+    --me:#ffd54f; --me-border:#f57f17; --head:#f2f2f2; --line:#333;
   }
-  .wrap { display: flex; gap: 40px; align-items: flex-start; }
-  table { border-collapse: collapse; table-layout: fixed; }
-  td {
-    border: 1px solid #000; padding: 4px 6px; text-align: center;
-    vertical-align: middle; line-height: 1.5; height: 29px;
-  }
-  .left { width: 416px; }
-  .left table { width: 100%; }
-  .spacer { height: 29px; }
-  .mic-title { background: #efd0ee; height: 58px; }
-  .gap td { border: 0; height: 29px; }
-  .legend { width: 112px; }
-  .legend table { width: 100%; }
-  .schedules { display: flex; flex-direction: column; gap: 28px; }
-  .day { border: 2px solid #000; }
-  .day .lb { width: 116px; }
-  .day .place { height: 58px; }
-  .day .tl { text-align: left; }
-  .p { background: #fbe0d4; }
-  .c { background: #daf0d4; }
-
-  /* 이름 클릭 기능 */
-  td.staff { cursor: pointer; }
-  td.staff:hover { outline: 2px solid #888; }
-  td.hl { background: #ffe58a !important; }
-  #my-panel {
-    position: fixed; right: 12px; bottom: 12px; width: 340px;
-    max-height: 70vh; overflow: auto; background: #fff;
-    border: 2px solid #000; padding: 10px; z-index: 10; font-size: 14px;
-  }
-  #my-panel[hidden] { display: none; }
-  #my-panel .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  #my-panel ul { margin: 4px 0 10px; padding-left: 18px; line-height: 1.6; }
+  *{box-sizing:border-box}
+  body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;margin:0;padding:16px;background:#fafafa;color:#222}
+  h1{font-size:1.4rem;margin:0 0 4px}
+  .sub{color:#666;font-size:.9rem;margin-bottom:14px}
+  .search{display:flex;gap:8px;margin-bottom:10px}
+  .search input{flex:1;max-width:320px;padding:10px 12px;font-size:1rem;border:2px solid #999;border-radius:8px}
+  .search button{padding:10px 14px;border:0;border-radius:8px;background:#555;color:#fff;cursor:pointer}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .chip{padding:6px 12px;border:1px solid #bbb;border-radius:999px;background:#fff;cursor:pointer;font-size:.95rem}
+  .chip:hover{background:#eee}
+  .chip.active{background:var(--me);border-color:var(--me-border);font-weight:700}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 16px;font-size:.85rem}
+  .legend span{padding:3px 10px;border:1px solid #bbb}
+  .lg-p{background:var(--picket)} .lg-l{background:var(--lecture)} .lg-m{background:var(--mic)} .lg-me{background:var(--me);font-weight:700}
+  .card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px 16px;margin-bottom:18px}
+  .card h2{font-size:1.1rem;margin:0 0 10px}
+  .day-block{margin-bottom:12px}
+  .day-block h3{font-size:1rem;margin:10px 0 6px;border-left:4px solid var(--me-border);padding-left:8px}
+  .item{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px dashed #eee;font-size:.95rem;flex-wrap:wrap}
+  .time{min-width:110px;font-weight:700}
+  .badge{padding:1px 8px;border-radius:4px;font-size:.8rem;border:1px solid #bbb}
+  .b-p{background:var(--picket)} .b-l{background:var(--lecture)} .b-m{background:var(--mic)}
+  .empty{color:#888}
+  .scroll{overflow-x:auto;margin-bottom:22px}
+  table{border-collapse:collapse;font-size:.85rem;background:#fff;min-width:600px}
+  th,td{border:1px solid #bbb;padding:5px 8px;text-align:center;white-space:nowrap}
+  table.day{border:2px solid var(--line)}
+  th{background:var(--head)}
+  td.p{background:var(--picket)} td.l{background:var(--lecture)} td.n{color:#999}
+  td small{color:#444}
+  th.mine{background:#bbdefb;outline:2px solid #1976d2;outline-offset:-2px}
+  td.me{background:var(--me)!important;font-weight:700;outline:2px solid var(--me-border);outline-offset:-2px}
+  .mic-table td.names{white-space:normal;text-align:left;line-height:1.8}
+  .mic-name{display:inline-block;padding:0 6px;margin:1px 2px;border-radius:4px}
+  .mic-name.me{background:var(--me);font-weight:700;outline:2px solid var(--me-border)}
+  .hint{color:#888;font-size:.85rem}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- 왼쪽: 기간 + 야외 마이크 유세 -->
-  <div class="left">
-    <table>
-      <tr><td style="width:205px">선거운동기간</td><td>11/9(월)~11/23(월)</td></tr>
-    </table>
-    <div class="spacer"></div>
-    <table id="mic">
-      <tr><td class="mic-title" colspan="2">야외 마이크 유세</td></tr>
+<h1>🗳️ 선거운동 일정 조회</h1>
+<div class="sub">선거운동기간: 11/9(월) ~ 11/23(월) · 이름을 입력하거나 아래 버튼을 눌러보세요.</div>
 
-      <tr><td style="width:205px">11/10(화) 13:00~13:10</td><td>제2사범관 앞</td></tr>
-      <tr><td colspan="2">지영, 수연, 지민, 재윤, 찬영, 승훈, 민경</td></tr>
-      <tr class="gap"><td colspan="2"></td></tr>
+<div class="search">
+  <input id="nameInput" type="text" placeholder="이름 입력 (예: 민경)" autocomplete="off">
+  <button id="resetBtn">초기화</button>
+</div>
+<div class="chips" id="chips"></div>
 
-      <tr><td>11/18(수) 16:40~16:50</td><td>제1사범관 앞</td></tr>
-      <tr><td colspan="2">지영, 수연, 지민, 시현, 재윤, 은지, 금비, 서영,<br>유비, 주현, 찬영, 민경</td></tr>
-      <tr class="gap"><td colspan="2"></td></tr>
-
-      <tr><td>11/23(월) 13:00~13:10</td><td>제1사범관 앞</td></tr>
-      <tr><td colspan="2">지영, 수연, 지민, 시현, 재윤, 은지, 금비, 서영,<br>유비, 주현, 승훈, 민경, 지호</td></tr>
-    </table>
-  </div>
-
-  <!-- 범례 -->
-  <div class="legend">
-    <table>
-      <tr><td class="p">피켓 유세</td></tr>
-      <tr><td class="c">강의실 유세</td></tr>
-    </table>
-  </div>
-
-  <!-- 요일별 시간표 -->
-  <div class="schedules">
-
-    <!-- 월 (6열) -->
-    <table class="day" style="width:1136px">
-      <tr><td class="lb">요일</td><td colspan="6">월</td></tr>
-      <tr>
-        <td class="tl">시간</td>
-        <td>8:30~8:40</td><td>8:40~8:50</td><td>8:50~9:00</td>
-        <td>12:30~12:40</td><td>12:40~12:50</td><td>12:50~13:00</td>
-      </tr>
-      <tr class="place">
-        <td>11/9 장소</td>
-        <td>-</td>
-        <td class="c">화학교재 및 연구법<br>606-221</td>
-        <td class="c">국문학원전이해<br>701-305</td>
-        <td class="c">배드민턴(경기전략과지도법)<br>706-106</td>
-        <td class="c">중급한국무용의이론과실제<br>706-103</td>
-        <td class="c">체조(마루운동)<br>511-101</td>
-      </tr>
-      <tr class="place">
-        <td>11/16 장소</td>
-        <td>-</td><td>-</td>
-        <td class="c">영어작문연습<br>701-102</td>
-        <td>-</td><td>-</td><td>-</td>
-      </tr>
-      <tr><td rowspan="6">실무 인원</td>
-        <td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td></tr>
-      <tr><td>수연</td><td>수연</td><td>수연</td><td>지민</td><td>지민</td><td>지민</td></tr>
-      <tr><td>지민</td><td>지민</td><td>지민</td><td data-alt="11/16:은지" title="11/16은 은지">주현</td><td>주현</td><td>주현</td></tr>
-      <tr><td>찬영</td><td>찬영</td><td>찬영</td><td>서영</td><td>서영</td><td>서영</td></tr>
-      <tr><td>시현</td><td>시현</td><td>시현</td><td>재윤</td><td>재윤</td><td>재윤</td></tr>
-      <tr><td></td><td></td><td></td><td></td><td></td><td>수연</td></tr>
-    </table>
-
-    <!-- 화 (7열) -->
-    <table class="day" style="width:1306px">
-      <tr><td class="lb">요일</td><td colspan="7">화</td></tr>
-      <tr>
-        <td class="tl">시간</td>
-        <td>8:30~8:40</td><td>8:40~8:50</td><td>8:50~9:00</td>
-        <td>9:30~9:40</td><td>9:40~9:50</td>
-        <td>14:30~14:40</td><td>14:40~14:50</td>
-      </tr>
-      <tr class="place">
-        <td>11/10 장소</td>
-        <td>-</td>
-        <td class="c">응용영어음운론<br>701-102</td>
-        <td class="c">기하학일반및지도<br>607-109</td>
-        <td>-</td><td>-</td>
-        <td class="c">교육철학및교육사<br>206-11301-1</td>
-        <td class="c">교육학개론<br>206-11301-2</td>
-      </tr>
-      <tr class="place">
-        <td>11/17 장소</td>
-        <td class="p">416 피켓</td>
-        <td class="c">면역학<br>416-109</td>
-        <td>-</td><td>-</td><td>-</td>
-        <td class="c">특수교육학개론<br>422-411</td>
-        <td class="c">관광여가지리학<br>417-510</td>
-      </tr>
-      <tr><td rowspan="5">실무 인원</td>
-        <td>지영</td><td>지영</td><td>지영</td><td>-</td><td>-</td><td>지영</td><td>지영</td></tr>
-      <tr><td>수연</td><td>수연</td><td>수연</td><td>수연</td><td>수연</td><td>지민</td><td>지민</td></tr>
-      <tr><td>지호</td><td>지호</td><td>지호</td><td>지호</td><td>지호</td><td>찬영</td><td>찬영</td></tr>
-      <tr><td>민경</td><td>민경</td><td>민경</td><td>민경</td><td>민경</td><td>윤서</td><td>윤서</td></tr>
-      <tr><td>주현</td><td>주현</td><td>주현</td><td>주현</td><td>주현</td><td>주현</td><td>주현</td></tr>
-    </table>
-
-    <!-- 수 (8열) -->
-    <table class="day" style="width:1476px">
-      <tr><td class="lb">요일</td><td colspan="8">수</td></tr>
-      <tr>
-        <td class="tl">시간</td>
-        <td>8:30~8:40</td><td>8:40~8:50</td><td>8:50~9:00</td>
-        <td>10:00~10:10</td><td>10:10~10:20</td>
-        <td>12:50~13:00</td><td>13:00~13:10</td><td>13:10~13:20</td>
-      </tr>
-      <tr class="place">
-        <td>11/11 장소</td>
-        <td class="p">701 피켓</td>
-        <td class="c">영어교육문법<br>701-105</td>
-        <td class="c">일반화학<br>606-209</td>
-        <td class="c">의사소통장애학생교육<br>422-409</td>
-        <td class="c">동양한국윤리입문<br>417-303</td>
-        <td>-</td><td>-</td>
-        <td class="c">아동건강교육<br>211-303</td>
-      </tr>
-      <tr class="place">
-        <td>11/18 장소</td>
-        <td>-</td>
-        <td class="p">309 피켓</td>
-        <td class="c">일반물리학<br>309-403</td>
-        <td class="c">동아시아근세사교육<br>418-204</td>
-        <td class="c">서양사입문 417-407</td>
-        <td>-</td><td>-</td><td>-</td>
-      </tr>
-      <tr><td rowspan="5">실무 인원</td>
-        <td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td></tr>
-      <tr><td>지민</td><td>지민</td><td>지민</td><td>승훈</td><td>승훈</td><td>수연</td><td>수연</td><td>수연</td></tr>
-      <tr><td>하원</td><td>하원</td><td>하원</td><td>하원</td><td>하원</td><td>지민</td><td>지민</td><td>지민</td></tr>
-      <tr><td>찬영</td><td>찬영</td><td>찬영</td><td>찬영</td><td>찬영</td><td>유비</td><td>유비</td><td>유비</td></tr>
-      <tr><td>승훈</td><td>승훈</td><td>승훈</td><td>금비</td><td>금비</td><td data-alt="11/18:주현" title="11/18은 주현">은지</td><td>은지</td><td>은지</td></tr>
-    </table>
-
-    <!-- 목 (6열) -->
-    <table class="day" style="width:1136px">
-      <tr><td class="lb">요일</td><td colspan="6">목</td></tr>
-      <tr>
-        <td class="tl">시간</td>
-        <td>8:30~8:40</td><td>8:40~8:50</td><td>8:50~9:00</td>
-        <td>12:20~12:30</td><td>12:30~12:40</td><td>12:40~12:50</td>
-      </tr>
-      <tr class="place">
-        <td>11/12 장소</td>
-        <td class="p">701 피켓</td>
-        <td class="c">독서교육론<br>701-303</td>
-        <td class="c">현대소설론<br>701-302</td>
-        <td>-</td><td>-</td><td>-</td>
-      </tr>
-      <tr class="place">
-        <td>11/19 장소</td>
-        <td class="p">422 피켓</td>
-        <td class="c">특수교육교사론<br>422-411</td>
-        <td class="c">인구및자원지리학<br>417-510</td>
-        <td>-</td><td>-</td><td>-</td>
-      </tr>
-      <tr><td rowspan="5">실무 인원</td>
-        <td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td><td>지영</td></tr>
-      <tr><td>수연</td><td>수연</td><td>수연</td><td>수연</td><td>수연</td><td>수연</td></tr>
-      <tr><td>윤서</td><td>윤서</td><td>윤서</td><td>지민</td><td>지민</td><td>지민</td></tr>
-      <tr><td>승훈</td><td>승훈</td><td>승훈</td><td>찬영</td><td>찬영</td><td>찬영</td></tr>
-      <tr><td>주현</td><td>주현</td><td>주현</td><td>하원</td><td>하원</td><td>하원</td></tr>
-    </table>
-
-  </div>
+<div class="legend">
+  <span class="lg-p">피켓 유세</span>
+  <span class="lg-l">강의실 유세</span>
+  <span class="lg-m">야외 마이크 유세</span>
+  <span class="lg-me">내 이름</span>
 </div>
 
-<!-- 내 스케줄 패널 -->
-<div id="my-panel" hidden>
-  <div class="head"><b id="my-title"></b><button type="button" id="my-close">닫기</button></div>
-  <div id="my-body"></div>
-</div>
+<div id="summary"></div>
+<div id="tables"></div>
 
 <script>
-(function () {
-  const NAME_OK = /^[가-힣]{2,3}$/;
+/* ===================== 데이터 ===================== */
+const L = (n, r) => ({type:'l', name:n, room:r});   // 강의실 유세
+const P = (t)    => ({type:'p', name:t});           // 피켓 유세
+const N = null;                                      // 장소 없음 '-'
 
-  // 요일 표 읽기
-  const days = [];
-  document.querySelectorAll("table.day").forEach(t => {
-    const rows = [...t.rows];
-    const dayName = rows[0].cells[1].textContent.trim();
-    const times = [...rows[1].cells].slice(1).map(c => c.textContent.trim());
-    const places = [], staff = [];
-    rows.slice(2).forEach(r => {
-      const cells = [...r.cells];
-      if (r.classList.contains("place")) {
-        places.push({ date: cells[0].textContent.replace("장소", "").trim(), cells: cells.slice(1) });
-      } else {
-        staff.push(cells[0].hasAttribute("rowspan") ? cells.slice(1) : cells);
-      }
+// 야외 마이크 유세
+const mics = [
+  {date:'11/10(화)', time:'13:00~13:10', place:'제2사범관 앞',
+   people:['지영','수연','지민','재윤','찬영','승훈','민경']},
+  {date:'11/18(수)', time:'16:40~16:50', place:'제1사범관 앞',
+   people:['지영','수연','지민','시현','재윤','은지','금비','서영','유비','주현','찬영','민경']},
+  {date:'11/23(월)', time:'13:00~13:10', place:'제1사범관 앞',
+   people:['지영','수연','지민','시현','재윤','은지','금비','서영','유비','주현','승훈','민경','지호']},
+];
+
+// 요일별 실무표 (places: [첫째 주 날짜 장소, 둘째 주 날짜 장소])
+const days = [
+  { day:'월', dates:['11/9','11/16'], slots:[
+    {t:'8:30~8:40',  places:[N,N], people:['지영','수연','지민','찬영','시현']},
+    {t:'8:40~8:50',  places:[L('화학교재 및 연구법','606-221'), N], people:['지영','수연','지민','찬영','시현']},
+    {t:'8:50~9:00',  places:[L('국문학원전이해','701-305'), L('영어작문연습','701-102')], people:['지영','수연','지민','찬영','시현']},
+    {t:'12:30~12:40',places:[L('배드민턴(경기전략과지도법)','706-106'), N], people:['지영','지민','주현','서영','재윤']},
+    {t:'12:40~12:50',places:[L('중급한국무용의이론과실제','706-103'), N], people:['지영','지민','주현','서영','재윤']},
+    {t:'12:50~13:00',places:[L('체조(마루운동)','511-101'), N], people:['지영','지민','주현','서영','재윤','수연']},
+  ]},
+  { day:'화', dates:['11/10','11/17'], slots:[
+    {t:'8:30~8:40',  places:[N, P('416 피켓')], people:['지영','수연','지호','민경','주현']},
+    {t:'8:40~8:50',  places:[L('응용영어음운론','701-102'), L('면역학','416-109')], people:['지영','수연','지호','민경','주현']},
+    {t:'8:50~9:00',  places:[L('기하학일반및지도','607-109'), N], people:['지영','수연','지호','민경','주현']},
+    {t:'9:30~9:40',  places:[N,N], people:[null,'수연','지호','민경','주현']},
+    {t:'9:40~9:50',  places:[N,N], people:[null,'수연','지호','민경','주현']},
+    {t:'14:30~14:40',places:[L('교육철학및교육사','206-11301-1'), L('특수교육학개론','422-411')], people:['지영','지민','찬영','윤서','주현']},
+    {t:'14:40~14:50',places:[L('교육학개론','206-11301-2'), L('관광여가지리학','417-510')], people:['지영','지민','찬영','윤서','주현']},
+  ]},
+  { day:'수', dates:['11/11','11/18'], slots:[
+    {t:'8:30~8:40',  places:[P('701 피켓'), N], people:['지영','지민','하원','찬영','승훈']},
+    {t:'8:40~8:50',  places:[L('영어교육문법','701-105'), P('309 피켓')], people:['지영','지민','하원','찬영','승훈']},
+    {t:'8:50~9:00',  places:[L('일반화학','606-209'), L('일반물리학','309-403')], people:['지영','지민','하원','찬영','승훈']},
+    {t:'10:00~10:10',places:[L('의사소통장애학생교육','422-409'), L('동아시아근세사교육','418-204')], people:['지영','승훈','하원','찬영','금비']},
+    {t:'10:10~10:20',places:[L('동양한국윤리입문','417-303'), L('서양사입문','417-407')], people:['지영','승훈','하원','찬영','금비']},
+    {t:'12:50~13:00',places:[N,N], people:['지영','수연','지민','유비','은지']},
+    {t:'13:00~13:10',places:[N,N], people:['지영','수연','지민','유비','은지']},
+    {t:'13:10~13:20',places:[L('아동건강교육','211-303'), N], people:['지영','수연','지민','유비','은지']},
+  ]},
+  { day:'목', dates:['11/12','11/19'], slots:[
+    {t:'8:30~8:40',  places:[P('701 피켓'), P('422 피켓')], people:['지영','수연','윤서','승훈','주현']},
+    {t:'8:40~8:50',  places:[L('독서교육론','701-303'), L('특수교육교사론','422-411')], people:['지영','수연','윤서','승훈','주현']},
+    {t:'8:50~9:00',  places:[L('현대소설론','701-302'), L('인구및자원지리학','417-510')], people:['지영','수연','윤서','승훈','주현']},
+    {t:'12:20~12:30',places:[N,N], people:['지영','수연','지민','찬영','하원']},
+    {t:'12:30~12:40',places:[N,N], people:['지영','수연','지민','찬영','하원']},
+    {t:'12:40~12:50',places:[N,N], people:['지영','수연','지민','찬영','하원']},
+  ]},
+];
+
+/* ===================== 유틸 ===================== */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// 전체 이름 목록
+const allNames = (() => {
+  const set = new Set();
+  days.forEach(d => d.slots.forEach(s => s.people.forEach(p => p && set.add(p))));
+  mics.forEach(m => m.people.forEach(p => set.add(p)));
+  return [...set].sort((a,b) => a.localeCompare(b,'ko'));
+})();
+
+let selected = '';
+
+/* ===================== 렌더링 ===================== */
+function renderChips(filterText=''){
+  const box = document.getElementById('chips');
+  const list = allNames.filter(n => n.includes(filterText.trim()));
+  box.innerHTML = list.map(n =>
+    `<button class="chip ${n===selected?'active':''}" data-name="${esc(n)}">${esc(n)}</button>`
+  ).join('') || '<span class="hint">일치하는 이름이 없습니다.</span>';
+}
+
+function placeText(pl){
+  if(!pl) return '';
+  return pl.type==='l' ? `${esc(pl.name)} <small>(${esc(pl.room)})</small>` : esc(pl.name);
+}
+
+function renderSummary(){
+  const box = document.getElementById('summary');
+  if(!selected){
+    box.innerHTML = `<div class="card"><span class="empty">이름을 선택하면 본인의 일정 요약이 여기에 표시됩니다.</span></div>`;
+    return;
+  }
+  let html = `<div class="card"><h2>📌 ${esc(selected)} 님의 일정 요약</h2>`;
+  let total = 0;
+
+  // 마이크 유세
+  const myMics = mics.filter(m => m.people.includes(selected));
+  if(myMics.length){
+    html += `<div class="day-block"><h3>🎤 야외 마이크 유세</h3>`;
+    myMics.forEach(m => {
+      total++;
+      html += `<div class="item"><span class="time">${esc(m.date)} ${esc(m.time)}</span>
+               <span class="badge b-m">마이크</span><span>${esc(m.place)}</span></div>`;
     });
-    staff.forEach(row => row.forEach(td => {
-      if (NAME_OK.test(td.textContent.trim())) td.classList.add("staff");
-    }));
-    days.push({ dayName, times, places, staff });
-  });
-
-  // 마이크 유세 읽기
-  const mic = [];
-  let cur = null;
-  [...document.getElementById("mic").rows].forEach(r => {
-    const c = r.cells;
-    if (c.length === 2) {
-      cur = { when: c[0].textContent.trim(), where: c[1].textContent.trim() };
-    } else if (c.length === 1 && cur && c[0].textContent.includes(",")) {
-      cur.people = c[0].textContent.split(/\s*,\s*/).map(s => s.trim());
-      mic.push(cur);
-      cur = null;
-    }
-  });
-
-  // 날짜별 이름 (data-alt="날짜:이름" 이면 그 날짜만 다른 사람)
-  function nameAt(td, date) {
-    const alt = td.dataset.alt;
-    if (alt) {
-      const [d, n] = alt.split(":");
-      if (d === date) return n;
-    }
-    return td.textContent.trim();
+    html += `</div>`;
   }
 
-  const dateKey = d => { const [m, day] = d.split("/").map(Number); return m * 100 + day; };
-  const placeText = td => td.innerHTML.replace(/<br\s*\/?>/gi, " ").replace(/\s+/g, " ").trim();
-
-  let selected = null;
-  const panel = document.getElementById("my-panel");
-
-  function clear() {
-    document.querySelectorAll("td.hl").forEach(td => td.classList.remove("hl"));
-    panel.hidden = true;
-    selected = null;
-  }
-
-  function select(name) {
-    document.querySelectorAll("td.hl").forEach(td => td.classList.remove("hl"));
-    const items = [];
-
-    days.forEach(d => {
-      d.times.forEach((time, col) => {
-        d.places.forEach(p => {
-          const place = placeText(p.cells[col]);
-          if (place === "-") return; // 그날 해당 시간에 유세 없음
-          if (d.staff.some(row => row[col] && nameAt(row[col], p.date) === name)) {
-            items.push({ date: p.date, day: d.dayName, time, place });
-          }
-        });
-        d.staff.forEach(row => {
-          const td = row[col];
-          if (!td) return;
-          const alt = (td.dataset.alt || "").split(":")[1];
-          if (td.textContent.trim() === name || alt === name) td.classList.add("hl");
-        });
+  // 요일별 실무
+  days.forEach(d => {
+    const rows = [];
+    d.dates.forEach((date, di) => {
+      d.slots.forEach(s => {
+        if(s.people.includes(selected) && s.places[di]){
+          rows.push({date, t:s.t, pl:s.places[di]});
+        }
       });
     });
-
-    items.sort((a, b) => dateKey(a.date) - dateKey(b.date));
-    const myMic = mic.filter(m => m.people.includes(name));
-
-    let html = "<b>강의실·피켓 유세</b><ul>";
-    html += items.length
-      ? items.map(i => `<li>${i.date}(${i.day}) ${i.time} · ${i.place}</li>`).join("")
-      : "<li>없음</li>";
-    html += "</ul><b>야외 마이크 유세</b><ul>";
-    html += myMic.length
-      ? myMic.map(m => `<li>${m.when} · ${m.where}</li>`).join("")
-      : "<li>없음</li>";
-    html += "</ul>";
-
-    document.getElementById("my-title").textContent =
-      `${name} 스케줄 (유세 ${items.length}건, 마이크 ${myMic.length}건)`;
-    document.getElementById("my-body").innerHTML = html;
-    panel.hidden = false;
-    selected = name;
-  }
-
-  document.addEventListener("click", e => {
-    const td = e.target.closest("td.staff");
-    if (!td) return;
-    const name = td.textContent.trim();
-    selected === name ? clear() : select(name);
+    if(rows.length){
+      html += `<div class="day-block"><h3>${esc(d.day)}요일 실무</h3>`;
+      rows.forEach(r => {
+        total++;
+        html += `<div class="item"><span class="time">${esc(r.date)} ${esc(r.t)}</span>
+          <span class="badge ${r.pl.type==='p'?'b-p':'b-l'}">${r.pl.type==='p'?'피켓':'강의실'}</span>
+          <span>${placeText(r.pl)}</span></div>`;
+      });
+      html += `</div>`;
+    }
   });
-  document.getElementById("my-close").addEventListener("click", clear);
-})();
+
+  if(!total) html += `<div class="empty">배정된 일정이 없습니다.</div>`;
+  else html += `<div class="hint">총 ${total}건 · 장소가 '-'인 시간대는 요약에서 제외했습니다.</div>`;
+  html += `</div>`;
+  box.innerHTML = html;
+}
+
+function renderTables(){
+  let html = `<h2 style="font-size:1.1rem">📋 실무 표</h2>`;
+
+  // 마이크 표
+  html += `<div class="scroll"><table class="mic-table day"><tr><th colspan="3">야외 마이크 유세</th></tr>
+           <tr><th>날짜/시간</th><th>장소</th><th>인원</th></tr>`;
+  mics.forEach(m => {
+    html += `<tr><td>${esc(m.date)}<br>${esc(m.time)}</td><td>${esc(m.place)}</td><td class="names">` +
+      m.people.map(p => `<span class="mic-name ${p===selected?'me':''}">${esc(p)}</span>`).join('') +
+      `</td></tr>`;
+  });
+  html += `</table></div>`;
+
+  // 요일별 표
+  days.forEach(d => {
+    const n = d.slots.length;
+    const maxP = Math.max(...d.slots.map(s => s.people.length));
+    html += `<div class="scroll"><table class="day">`;
+    html += `<tr><th>요일</th><th colspan="${n}">${esc(d.day)}</th></tr>`;
+    html += `<tr><th>시간</th>` + d.slots.map(s =>
+      `<th class="${selected && s.people.includes(selected)?'mine':''}">${esc(s.t)}</th>`).join('') + `</tr>`;
+    d.dates.forEach((date, di) => {
+      html += `<tr><th>${esc(date)} 장소</th>` + d.slots.map(s => {
+        const pl = s.places[di];
+        if(!pl) return `<td class="n">-</td>`;
+        return `<td class="${pl.type}">${placeText(pl)}</td>`;
+      }).join('') + `</tr>`;
+    });
+    for(let i=0;i<maxP;i++){
+      html += `<tr>`;
+      if(i===0) html += `<th rowspan="${maxP}">실무 인원</th>`;
+      html += d.slots.map(s => {
+        const p = s.people[i];
+        if(p===undefined) return `<td></td>`;
+        if(p===null) return `<td class="n">-</td>`;
+        return `<td class="${p===selected?'me':''}">${esc(p)}</td>`;
+      }).join('') + `</tr>`;
+    }
+    html += `</table></div>`;
+  });
+
+  document.getElementById('tables').innerHTML = html;
+}
+
+function select(name){
+  selected = name;
+  document.getElementById('nameInput').value = name;
+  renderChips(name);
+  renderSummary();
+  renderTables();
+  if(name) window.scrollTo({top:document.getElementById('summary').offsetTop-10, behavior:'smooth'});
+}
+
+/* ===================== 이벤트 ===================== */
+const input = document.getElementById('nameInput');
+input.addEventListener('input', () => {
+  const v = input.value.trim();
+  if(allNames.includes(v)){
+    selected = v;
+    renderChips(v); renderSummary(); renderTables();
+  } else {
+    selected = '';
+    renderChips(v); renderSummary(); renderTables();
+  }
+});
+input.addEventListener('keydown', e => {
+  if(e.key==='Enter'){
+    const matches = allNames.filter(n => n.includes(input.value.trim()));
+    if(matches.length===1) select(matches[0]);
+  }
+});
+document.getElementById('chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if(b) select(b.dataset.name);
+});
+document.getElementById('resetBtn').addEventListener('click', () => select(''));
+
+/* 초기 렌더링 */
+renderChips(); renderSummary(); renderTables();
 </script>
 </body>
 </html>
