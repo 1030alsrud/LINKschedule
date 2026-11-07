@@ -6,17 +6,29 @@
   <title>선거운동 실무 일정표</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      padding: 18px;
+      padding: 16px;
       color: #222;
       background: #f5f6f8;
       font-family: Arial, "Malgun Gothic", sans-serif;
     }
+
     h1 { margin: 0 0 6px; font-size: 22px; }
-    .period { margin-bottom: 14px; font-size: 16px; }
-    .legend { display: flex; gap: 8px; margin-bottom: 16px; }
-    .legend span { padding: 5px 10px; border: 1px solid #aaa; }
+    .period { margin-bottom: 14px; }
+
+    .legend {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .legend span {
+      padding: 5px 10px;
+      border: 1px solid #aaa;
+    }
+
     .picket { background: #fbe0d3; }
     .classroom { background: #dcf0d3; }
 
@@ -26,6 +38,7 @@
       gap: 6px;
       margin: 14px 0;
     }
+
     button {
       padding: 7px 12px;
       border: 1px solid #888;
@@ -34,30 +47,54 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button.active { color: white; background: #245c9b; border-color: #245c9b; }
+
+    button.active {
+      color: white;
+      background: #245c9b;
+      border-color: #245c9b;
+    }
 
     .result {
       display: none;
-      margin: 16px 0;
+      margin: 16px 0 22px;
       padding: 14px;
       border: 2px solid #245c9b;
       background: white;
     }
+
     .result.show { display: block; }
     .result h2 { margin: 0 0 10px; font-size: 18px; }
-    .result-day { margin: 12px 0; }
+    .result-day { margin-top: 14px; }
     .result-day h3 { margin: 0 0 6px; font-size: 16px; }
+
     .result-item {
       padding: 7px 0;
       border-top: 1px solid #ddd;
       line-height: 1.6;
     }
-    .date { color: #c62828; font-weight: bold; }
 
-    .day { margin: 20px 0 28px; }
-    .day h2 { margin: 0; padding: 8px; text-align: center; background: #e9edf3; }
+    /* 개인 일정의 날짜는 검은색 */
+    .result-date {
+      color: #111;
+      font-weight: bold;
+    }
+
+    .day { margin: 22px 0 30px; }
+    .day h2 {
+      margin: 0;
+      padding: 8px;
+      text-align: center;
+      background: #e9edf3;
+    }
+
     .table-wrap { overflow-x: auto; background: white; }
-    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+
+    table {
+      width: 100%;
+      min-width: 850px;
+      border-collapse: collapse;
+    }
+
     th, td {
       padding: 7px;
       border: 1px solid #555;
@@ -66,14 +103,25 @@
       white-space: pre-line;
       font-size: 14px;
     }
+
     th { background: #f4f4f4; }
     td.picket-cell { background: #fbe0d3; }
     td.classroom-cell { background: #dcf0d3; }
-    td.selected { outline: 3px solid #f2bc25; outline-offset: -3px; }
+
+    td.selected {
+      outline: 3px solid #f2bc25;
+      outline-offset: -3px;
+    }
+
     .small { color: #555; font-size: 12px; }
 
     .mic { margin-top: 28px; }
-    .mic h2 { padding: 8px; text-align: center; background: #efd2ee; }
+    .mic h2 {
+      padding: 8px;
+      text-align: center;
+      background: #efd2ee;
+    }
+
     .mic-item {
       padding: 10px;
       border: 1px solid #777;
@@ -81,7 +129,9 @@
       background: white;
       line-height: 1.7;
     }
+
     .mic-item.selected { background: #fff2bf; }
+
     @media (max-width: 600px) {
       body { padding: 10px; }
       h1 { font-size: 19px; }
@@ -91,23 +141,36 @@
 <body>
   <h1>선거운동 실무 일정표</h1>
   <div class="period">선거운동기간 11/9(월) ~ 11/23(월)</div>
+
   <div class="legend">
     <span class="picket">피켓 유세</span>
     <span class="classroom">강의실 유세</span>
   </div>
 
-  <p>이름을 선택하면 해당 인원의 장소가 있는 일정만 결과표에 표시됩니다.</p>
+  <p>이름을 누르면 본인 일정이 먼저 나오고, 아래에서 전체 표를 확인할 수 있어요.</p>
+
   <div class="people" id="people"></div>
   <section class="result" id="result"></section>
   <main id="schedules"></main>
   <section class="mic" id="mic"></section>
 
 <script>
+/*
+  장소와 실무 인원은 이미지 표 기준.
+  각 시간의 staff 배열 순서는 표에 적힌 위에서 아래 순서.
+*/
 const schedules = [
   {
     day: "월요일",
     dates: ["11/9", "11/16"],
-    times: ["8:30~8:40", "8:40~8:50", "8:50~9:00", "12:30~12:40", "12:40~12:50", "12:50~13:00"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "12:30~12:40",
+      "12:40~12:50",
+      "12:50~13:00"
+    ],
     places: [
       ["-", "-"],
       ["화학교재 및 연구법\n606-221", "-"],
@@ -118,22 +181,27 @@ const schedules = [
     ],
     types: ["", "classroom", "classroom", "classroom", "classroom", "classroom"],
     staff: [
-      ["지영", "지영"],
-      ["수연", "수연"],
-      ["지민", "지민"],
-      ["찬영", "찬영"],
-      ["시현", "시현"],
-      ["", ""]
-    ],
-    changes: {
-      "12:30~12:40": { "11/9": "주현", "11/16": "은지" },
-      "12:50~13:00": { "11/9": "수연", "11/16": "" }
-    }
+      [["지영","수연","지민","찬영","시현"], ["지영","수연","지민","찬영","시현"]],
+      [["지영","수연","지민","찬영","시현"], ["지영","수연","지민","찬영","시현"]],
+      [["지영","수연","지민","찬영","시현"], ["지영","수연","지민","찬영","시현"]],
+      [["지영","지민","주현","서영","재윤"], ["지영","지민","은지","서영","재윤"]],
+      [["지영","지민","주현","서영","재윤"], ["지영","지민","주현","서영","재윤"]],
+      [["지영","지민","주현","서영","재윤","수연"], ["지영","지민","주현","서영","재윤","수연"]]
+    ]
   },
+
   {
     day: "화요일",
     dates: ["11/10", "11/17"],
-    times: ["8:30~8:40", "8:40~8:50", "8:50~9:00", "9:30~9:40", "9:40~9:50", "14:30~14:40", "14:40~14:50"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "9:30~9:40",
+      "9:40~9:50",
+      "14:30~14:40",
+      "14:40~14:50"
+    ],
     places: [
       ["-", "416 피켓"],
       ["응용영어음운론\n701-102", "면역학\n416-109"],
@@ -145,21 +213,29 @@ const schedules = [
     ],
     types: ["", "classroom", "classroom", "", "", "classroom", "classroom"],
     staff: [
-      ["지영", "지영"],
-      ["수연", "수연"],
-      ["지호", "지호"],
-      ["", ""],
-      ["", ""],
-      ["지민", "지민"],
-      ["찬영", "찬영"],
-      ["윤서", "윤서"],
-      ["주현", "주현"]
+      [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
+      [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
+      [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
+      [["지영","수연","지호","민경","주현"], ["","수연","지호","민경","주현"]],
+      [["","수연","지호","민경","주현"], ["","수연","지호","민경","주현"]],
+      [["지영","지민","찬영","윤서","주현"], ["지영","지민","찬영","윤서","주현"]],
+      [["지영","지민","찬영","윤서","주현"], ["지영","지민","찬영","윤서","주현"]]
     ]
   },
+
   {
     day: "수요일",
     dates: ["11/11", "11/18"],
-    times: ["8:30~8:40", "8:40~8:50", "8:50~9:00", "10:00~10:10", "10:10~10:20", "12:50~13:00", "13:00~13:10", "13:10~13:20"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "10:00~10:10",
+      "10:10~10:20",
+      "12:50~13:00",
+      "13:00~13:10",
+      "13:10~13:20"
+    ],
     places: [
       ["701 피켓", "-"],
       ["영어교육문법\n701-105", "309 피켓"],
@@ -172,27 +248,28 @@ const schedules = [
     ],
     types: ["picket", "classroom", "classroom", "classroom", "classroom", "", "", "classroom"],
     staff: [
-      ["지영", "지영"],
-      ["지민", "지민"],
-      ["하원", "하원"],
-      ["찬영", "찬영"],
-      ["승훈", "승훈"],
-      ["지영", "지영"],
-      ["승훈", "승훈"],
-      ["하원", "하원"],
-      ["찬영", "찬영"],
-      ["금비", "금비"],
-      ["은지", "주현"],
-      ["수연", "수연"],
-      ["지민", "지민"],
-      ["유비", "유비"],
-      ["은지", "은지"]
+      [["지영","지민","하원","찬영","승훈"], ["지영","지민","하원","찬영","승훈"]],
+      [["지영","지민","하원","찬영","승훈"], ["지영","지민","하원","찬영","승훈"]],
+      [["지영","지민","하원","찬영","승훈"], ["지영","지민","하원","찬영","승훈"]],
+      [["지영","승훈","하원","찬영","금비"], ["지영","승훈","하원","찬영","금비"]],
+      [["지영","승훈","하원","찬영","금비"], ["지영","승훈","하원","찬영","금비"]],
+      [["지영","수연","지민","유비","은지"], ["지영","수연","지민","유비","주현"]],
+      [["지영","수연","지민","유비","은지"], ["지영","수연","지민","유비","은지"]],
+      [["지영","수연","지민","유비","은지"], ["지영","수연","지민","유비","은지"]]
     ]
   },
+
   {
     day: "목요일",
     dates: ["11/12", "11/19"],
-    times: ["8:30~8:40", "8:40~8:50", "8:50~9:00", "12:20~12:30", "12:30~12:40", "12:40~12:50"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "12:20~12:30",
+      "12:30~12:40",
+      "12:40~12:50"
+    ],
     places: [
       ["701 피켓", "422 피켓"],
       ["독서교육론\n701-303", "특수교육교사론\n422-411"],
@@ -203,126 +280,104 @@ const schedules = [
     ],
     types: ["picket", "classroom", "classroom", "", "", ""],
     staff: [
-      ["지영", "지영"],
-      ["수연", "수연"],
-      ["윤서", "윤서"],
-      ["승훈", "승훈"],
-      ["주현", "주현"],
-      ["지영", "지영"],
-      ["수연", "수연"],
-      ["지민", "지민"],
-      ["찬영", "찬영"],
-      ["하원", "하원"]
+      [["지영","수연","윤서","승훈","주현"], ["지영","수연","윤서","승훈","주현"]],
+      [["지영","수연","윤서","승훈","주현"], ["지영","수연","윤서","승훈","주현"]],
+      [["지영","수연","윤서","승훈","주현"], ["지영","수연","윤서","승훈","주현"]],
+      [["지영","수연","지민","찬영","하원"], ["지영","수연","지민","찬영","하원"]],
+      [["지영","수연","지민","찬영","하원"], ["지영","수연","지민","찬영","하원"]],
+      [["지영","수연","지민","찬영","하원"], ["지영","수연","지민","찬영","하원"]]
     ]
   }
 ];
 
 const microphones = [
   {
-    date: "11/10(화)", time: "13:00~13:10", place: "제2사범관 앞",
-    people: ["지영", "수연", "지민", "재윤", "찬영", "승훈", "민경"]
+    date: "11/10(화)",
+    time: "13:00~13:10",
+    place: "제2사범관 앞",
+    people: ["지영","수연","지민","재윤","찬영","승훈","민경"]
   },
   {
-    date: "11/18(수)", time: "16:40~16:50", place: "제1사범관 앞",
-    people: ["지영", "수연", "지민", "시현", "재윤", "은지", "금비", "서영", "유비", "주현", "찬영", "민경"]
+    date: "11/18(수)",
+    time: "16:40~16:50",
+    place: "제1사범관 앞",
+    people: ["지영","수연","지민","시현","재윤","은지","금비","서영","유비","주현","찬영","민경"]
   },
   {
-    date: "11/23(월)", time: "13:00~13:10", place: "제1사범관 앞",
-    people: ["지영", "수연", "지민", "시현", "재윤", "은지", "금비", "서영", "유비", "주현", "승훈", "민경", "지호"]
+    date: "11/23(월)",
+    time: "13:00~13:10",
+    place: "제1사범관 앞",
+    people: ["지영","수연","지민","시현","재윤","은지","금비","서영","유비","주현","승훈","민경","지호"]
   }
 ];
 
 let selected = "";
-try { selected = localStorage.getItem("selectedPerson") || ""; } catch (e) {}
+try {
+  selected = localStorage.getItem("selectedPerson") || "";
+} catch (error) {}
 
-function staffAt(day, timeIndex, dateIndex) {
-  const date = day.dates[dateIndex];
-  const override = day.changes?.[day.times[timeIndex]]?.[date];
-  if (override !== undefined) return override;
-
-  const row = day.staff[timeIndex];
-  if (!row) return "";
-  return row[dateIndex] || "";
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
 }
 
-function renderPeople() {
+function getPeople() {
   const people = new Set();
 
   schedules.forEach(day => {
-    day.staff.forEach((_, timeIndex) => {
-      day.dates.forEach((_, dateIndex) => {
-        const name = staffAt(day, timeIndex, dateIndex);
-        if (name) people.add(name);
+    day.staff.forEach(timeStaff => {
+      timeStaff.forEach(dateStaff => {
+        dateStaff.forEach(name => {
+          if (name) people.add(name);
+        });
       });
     });
   });
+
   microphones.forEach(item => item.people.forEach(name => people.add(name)));
+  return [...people].sort((a, b) => a.localeCompare(b, "ko"));
+}
 
-  document.getElementById("people").innerHTML =
+function renderPeople() {
+  const names = getPeople();
+  const container = document.getElementById("people");
+
+  container.innerHTML =
     `<button data-person="">전체</button>` +
-    [...people].sort((a, b) => a.localeCompare(b, "ko"))
-      .map(name => `<button data-person="${name}">${name}</button>`).join("");
+    names.map(name =>
+      `<button data-person="${escapeHTML(name)}">${escapeHTML(name)}</button>`
+    ).join("");
 
-  document.querySelectorAll("#people button").forEach(button => {
+  container.querySelectorAll("button").forEach(button => {
     button.classList.toggle("active", button.dataset.person === selected);
+
     button.addEventListener("click", () => {
       selected = button.dataset.person;
-      try { localStorage.setItem("selectedPerson", selected); } catch (e) {}
+
+      try {
+        localStorage.setItem("selectedPerson", selected);
+      } catch (error) {}
+
       render();
     });
   });
 }
 
-function renderDay(day) {
-  let html = `<section class="day"><h2>${day.day} (${day.dates.join(" / ")})</h2>
-    <div class="table-wrap"><table><thead><tr><th>시간</th>`;
-
-  day.times.forEach(time => html += `<th>${time}</th>`);
-  html += `</tr><tr><th>장소</th>`;
-
-  day.places.forEach((places, i) => {
-    const type = day.types[i] === "picket" ? "picket-cell" :
-                 day.types[i] === "classroom" ? "classroom-cell" : "";
-    html += `<td class="${type}">${day.dates[0]}: ${places[0]}<br>${day.dates[1]}: ${places[1]}</td>`;
-  });
-
-  html += `</tr></thead><tbody>`;
-
-  const maxRows = Math.max(...day.times.map((_, i) =>
-    Math.max(
-      day.staff[i] ? 1 : 0,
-      day.staff[i + day.times.length] ? 1 : 0,
-      day.staff[i + day.times.length * 2] ? 1 : 0
-    )
-  ));
-
-  for (let row = 0; row < maxRows; row++) {
-    html += `<tr><th>실무 인원</th>`;
-    day.times.forEach((_, timeIndex) => {
-      const person = staffAt(day, timeIndex, 0);
-      const second = staffAt(day, timeIndex, 1);
-      const isSelected = selected && (person === selected || second === selected);
-      html += `<td class="${isSelected ? "selected" : ""}">${person || "—"}<br>${second || "—"}</td>`;
-    });
-    html += `</tr>`;
-    break;
-  }
-
-  html += `</tbody></table></div>
-    <div class="small">각 칸은 위에서부터 ${day.dates[0]}, ${day.dates[1]} 일정입니다.</div>
-    </section>`;
-  return html;
-}
-
 function renderResult() {
   const box = document.getElementById("result");
+
   if (!selected) {
     box.className = "result";
     box.innerHTML = "";
     return;
   }
 
-  let html = `<h2>${selected} 님 결과표</h2>`;
+  let html = `<h2>${escapeHTML(selected)} 님 참여 일정</h2>`;
   let found = false;
 
   schedules.forEach(day => {
@@ -331,21 +386,24 @@ function renderResult() {
     day.times.forEach((time, timeIndex) => {
       day.dates.forEach((date, dateIndex) => {
         const place = day.places[timeIndex][dateIndex];
-        const person = staffAt(day, timeIndex, dateIndex);
+        const names = day.staff[timeIndex][dateIndex] || [];
 
-        // 해당 날짜에 장소가 없거나 선택한 사람이 아니면 결과표에서 제외
-        if (!place || place === "-" || person !== selected) return;
+        // 그 날짜 장소가 '-'이면 개인 일정에 표시하지 않음
+        if (!place || place === "-" || !names.includes(selected)) return;
 
         items.push(
-          `<div class="result-item"><span class="date">${date} (${day.day})</span> · ` +
-          `${time} · ${place.replace(/\n/g, " ")}</div>`
+          `<div class="result-item">
+            <span class="result-date">${escapeHTML(date)} (${escapeHTML(day.day)})</span>
+            · ${escapeHTML(time)}
+            · ${escapeHTML(place).replace(/\n/g, " ")}
+          </div>`
         );
         found = true;
       });
     });
 
     if (items.length) {
-      html += `<div class="result-day"><h3>${day.day}</h3>${items.join("")}</div>`;
+      html += `<div class="result-day"><h3>${escapeHTML(day.day)}</h3>${items.join("")}</div>`;
     }
   });
 
@@ -353,7 +411,10 @@ function renderResult() {
     .filter(item => item.people.includes(selected))
     .map(item => {
       found = true;
-      return `<div class="result-item"><span class="date">${item.date}</span> · 야외 마이크 유세 · ${item.time} · ${item.place}</div>`;
+      return `<div class="result-item">
+        <span class="result-date">${escapeHTML(item.date)}</span>
+        · 야외 마이크 유세 · ${escapeHTML(item.time)} · ${escapeHTML(item.place)}
+      </div>`;
     });
 
   if (micItems.length) {
@@ -361,26 +422,97 @@ function renderResult() {
   }
 
   if (!found) html += "<p>표에 표시된 일정이 없습니다.</p>";
+
   box.className = "result show";
   box.innerHTML = html;
 }
 
+function renderDay(day) {
+  let html = `
+    <section class="day">
+      <h2>${escapeHTML(day.day)} (${day.dates.join(" / ")})</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>시간</th>
+              ${day.times.map(time => `<th>${escapeHTML(time)}</th>`).join("")}
+            </tr>
+            <tr>
+              <th>날짜·장소</th>
+              ${day.times.map((_, i) => {
+                const type = day.types[i] === "picket"
+                  ? "picket-cell"
+                  : day.types[i] === "classroom"
+                    ? "classroom-cell"
+                    : "";
+
+                return `<td class="${type}">
+                  ${escapeHTML(day.dates[0])}: ${escapeHTML(day.places[i][0])}<br>
+                  ${escapeHTML(day.dates[1])}: ${escapeHTML(day.places[i][1])}
+                </td>`;
+              }).join("")}
+            </tr>
+          </thead>
+          <tbody>`;
+
+  const rowCount = Math.max(
+    ...day.staff.flatMap(timeStaff => timeStaff.map(names => names.length))
+  );
+
+  for (let row = 0; row < rowCount; row++) {
+    html += `<tr><th>실무 인원 ${row + 1}</th>`;
+
+    day.staff.forEach(timeStaff => {
+      const firstDateName = timeStaff[0][row] || "—";
+      const secondDateName = timeStaff[1][row] || "—";
+      const isSelected =
+        selected &&
+        (firstDateName === selected || secondDateName === selected);
+
+      html += `<td class="${isSelected ? "selected" : ""}">
+        ${escapeHTML(firstDateName)}<br>${escapeHTML(secondDateName)}
+      </td>`;
+    });
+
+    html += "</tr>";
+  }
+
+  html += `
+          </tbody>
+        </table>
+      </div>
+      <div class="small">각 인원 칸은 위에서부터 ${escapeHTML(day.dates[0])}, ${escapeHTML(day.dates[1])} 순서입니다.</div>
+    </section>`;
+
+  return html;
+}
+
 function renderMic() {
-  let html = `<h2>야외 마이크 유세</h2>`;
+  let html = "<h2>야외 마이크 유세</h2>";
+
   microphones.forEach(item => {
-    const included = !selected || item.people.includes(selected);
-    html += `<div class="mic-item ${selected && included ? "selected" : ""}">
-      <strong>${item.date} ${item.time} · ${item.place}</strong><br>
-      ${item.people.join(", ")}
-    </div>`;
+    const isSelected = selected && item.people.includes(selected);
+    html += `
+      <div class="mic-item ${isSelected ? "selected" : ""}">
+        <strong>${escapeHTML(item.date)} ${escapeHTML(item.time)} · ${escapeHTML(item.place)}</strong><br>
+        ${item.people.map(name =>
+          name === selected ? `<strong>${escapeHTML(name)}</strong>` : escapeHTML(name)
+        ).join(", ")}
+      </div>`;
   });
+
   document.getElementById("mic").innerHTML = html;
 }
 
 function render() {
   renderPeople();
   renderResult();
-  document.getElementById("schedules").innerHTML = schedules.map(renderDay).join("");
+
+  // 개인 일정 결과표 바로 아래에 전체 일정표 표시
+  document.getElementById("schedules").innerHTML =
+    schedules.map(renderDay).join("");
+
   renderMic();
 }
 
