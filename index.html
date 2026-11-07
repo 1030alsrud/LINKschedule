@@ -1,213 +1,597 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>선거운동 실무 일정표</title>
-<style>
-  *{box-sizing:border-box}
-  body{margin:0;padding:16px;font-family:"Malgun Gothic",sans-serif;background:#f5f5f7;color:#222}
-  h1{font-size:20px;margin:0 0 4px}
-  .period{font-size:17px;font-weight:bold;color:#333;margin-bottom:12px}
-  .legend span{display:inline-block;padding:3px 10px;margin-right:6px;border:1px solid #bbb;font-size:13px}
-  .p{background:#fbe0d3}
-  .l{background:#dcf0cc}
-  .chips{margin:12px 0;display:flex;flex-wrap:wrap;gap:6px}
-  .chip{border:1px solid #aaa;background:#fff;border-radius:16px;padding:5px 11px;font-size:14px;cursor:pointer}
-  .chip.on{background:#2b6cb0;color:#fff;border-color:#2b6cb0}
-  .tabs{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap}
-  .tab{border:1px solid #888;background:#fff;padding:7px 16px;cursor:pointer;font-size:15px}
-  .tab.on{background:#222;color:#fff}
-  .day{margin-bottom:22px}
-  .day h2{font-size:18px;margin:0 0 6px}
-  .day small{font-weight:bold;color:#2b6cb0;font-size:18px;margin-left:6px}
-  .wrap{overflow-x:auto}
-  table{border-collapse:collapse;background:#fff;min-width:100%}
-  th,td{border:1px solid #333;padding:6px 8px;text-align:center;font-size:14px;white-space:nowrap}
-  th.side{background:#fff}
-  td.me{background:#ffe066;font-weight:bold}
-  td .ex{display:block;font-size:14px;color:#c0392b;font-weight:bold}
-  .sum{background:#fff;border:2px solid #2b6cb0;padding:10px 14px;margin:12px 0}
-  .sum h3{margin:0 0 6px;font-size:16px}
-  .sum ul{margin:0;padding-left:18px;font-size:14px;line-height:1.7}
-  .sum p{margin:6px 0 0;font-size:13px;color:#555}
-  .sum .dt{font-size:16px;font-weight:bold;color:#e00000}
-  .mic{margin-top:26px}
-  .mic h2{background:#ecd0f0;margin:0;padding:6px;text-align:center;font-size:16px;border:1px solid #333}
-  .mic .item{background:#fff;border:1px solid #333;border-top:0;padding:8px;font-size:14px;line-height:1.6}
-  .mic .item.me{background:#fff3b0}
-  .mic b{display:block;font-size:16px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>선거운동 실무 일정표</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      color: #222;
+      background: #f5f6f8;
+      font-family: Arial, "Malgun Gothic", sans-serif;
+    }
+
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .period { margin-bottom: 14px; }
+
+    .legend {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .legend span {
+      padding: 5px 10px;
+      border: 1px solid #aaa;
+    }
+
+    .picket { background: #fbe0d3; }
+    .classroom { background: #dcf0d3; }
+
+    .people {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 14px 0;
+    }
+
+    button {
+      padding: 7px 12px;
+      border: 1px solid #888;
+      border-radius: 5px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button.active {
+      color: white;
+      background: #245c9b;
+      border-color: #245c9b;
+    }
+
+    .result {
+      display: none;
+      margin: 16px 0 22px;
+      padding: 14px;
+      border: 2px solid #245c9b;
+      background: white;
+    }
+
+    .result.show { display: block; }
+    .result h2 { margin: 0 0 12px; font-size: 18px; }
+
+    .weekday-section { margin-top: 16px; }
+
+    .weekday-title {
+      margin: 0 0 8px;
+      padding: 6px 8px;
+      background: #e9edf3;
+      font-size: 16px;
+    }
+
+    .date-section { margin: 10px 0 14px 10px; }
+
+    .date-title {
+      margin: 0 0 4px;
+      color: #111;
+      font-size: 15px;
+    }
+
+    .result-item {
+      padding: 7px 0;
+      border-top: 1px solid #ddd;
+      line-height: 1.6;
+    }
+
+    .day { margin: 22px 0 30px; }
+
+    .day h2 {
+      margin: 0;
+      padding: 8px;
+      text-align: center;
+      background: #e9edf3;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 7px;
+      border: 1px solid #555;
+      text-align: center;
+      vertical-align: middle;
+      white-space: pre-line;
+      font-size: 14px;
+    }
+
+    th { background: #f4f4f4; }
+    td.picket-cell { background: #fbe0d3; }
+    td.classroom-cell { background: #dcf0d3; }
+
+    td.selected {
+      outline: 3px solid #f2bc25;
+      outline-offset: -3px;
+    }
+
+    .small {
+      margin-top: 5px;
+      color: #555;
+      font-size: 12px;
+    }
+
+    .mic { margin-top: 28px; }
+
+    .mic h2 {
+      padding: 8px;
+      text-align: center;
+      background: #efd2ee;
+    }
+
+    .mic-item {
+      padding: 10px;
+      border: 1px solid #777;
+      border-top: 0;
+      background: white;
+      line-height: 1.7;
+    }
+
+    .mic-item.selected { background: #fff2bf; }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      h1 { font-size: 19px; }
+    }
+  </style>
 </head>
 <body>
-<h1>선거운동 실무 일정표</h1>
-<div class="period">선거운동기간 11/9(월) ~ 11/23(월)</div>
-<div class="legend"><span class="p">피켓 유세</span><span class="l">강의실 유세</span></div>
+  <h1>선거운동 실무 일정표</h1>
+  <div class="period">선거운동기간 11/9(월) ~ 11/23(월)</div>
 
-<div class="chips" id="chips"></div>
-<div id="summary"></div>
-<div class="tabs" id="tabs"></div>
-<div id="content"></div>
-<div class="mic" id="mic"></div>
+  <div class="legend">
+    <span class="picket">피켓 유세</span>
+    <span class="classroom">강의실 유세</span>
+  </div>
+
+  <p>이름을 누르면 본인 일정이 요일·날짜별로 시간순으로 표시됩니다.</p>
+
+  <div class="people" id="people"></div>
+  <section class="result" id="result"></section>
+  <main id="schedules"></main>
+  <section class="mic" id="mic"></section>
 
 <script>
-const rep=(n,s)=>Array(n).fill(s);
-/* X(평소 이름, {날짜:바뀌는 이름}) : 특정 날짜만 사람이 바뀌는 칸 */
-const X=(n,ex)=>({n:n,ex:ex});
-const base=c=>typeof c==='string'?c:c.n;
-const onDate=(c,dt)=>typeof c==='string'?c:((c.ex&&c.ex[dt])||c.n);
-const allOf=c=>typeof c==='string'?[c]:[c.n,...Object.values(c.ex||{})];
+const schedules = [
+  {
+    day: "월요일",
+    dates: ["11/9", "11/16"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "12:30~12:40",
+      "12:40~12:50",
+      "12:50~13:00"
+    ],
+    places: [
+      ["-", "-"],
+      ["화학교재 및 연구법\n606-221", "-"],
+      ["국문학원전이해\n701-305", "영어작문연습\n701-102"],
+      ["배드민턴(경기전략과지도법)\n706-106", "-"],
+      ["중급한국무용의이론과실제\n706-103", "-"],
+      ["체조(마루운동)\n511-101", "-"]
+    ],
+    types: ["", "classroom", "classroom", "classroom", "classroom", "classroom"],
+    staff: [
+      [["지영","수연","지민","찬영","시현"], ["지영","수연","지민","찬영","시현"]],
+      [["지영","수연","지민","찬영","시현"], ["지영","수연","지민","찬영","시현"]],
+      [["지영","수연","지민","찬영","시현"], ["지영","수연","지민","찬영","시현"]],
+      [["지영","지민","주현","서영","재윤"], ["지영","지민","은지","서영","재윤"]],
+      [["지영","지민","주현","서영","재윤"], ["지영","지민","은지","서영","재윤"]],
+      [["지영","지민","주현","서영","재윤","수연"], ["지영","지민","은지","서영","재윤","수연"]]
+    ]
+  },
 
-/* y : 시간 칸별 색 (p=피켓, l=강의실) */
-const DAYS=[
- {d:'월',dates:['11/9','11/16','11/23'],
-  t:['8:30~8:40','8:40~8:50','8:50~9:00','12:30~12:40','12:40~12:50','12:50~13:00'],
-  y:'plllll',
-  rows:[
-   rep(6,'지영'),
-   rep(6,'지민'),
-   [...rep(3,'찬영'),...rep(3,X('주현',{'11/16':'은지'}))],
-   [...rep(3,'시현'),...rep(3,'서영')],
-   [...rep(3,'민경'),...rep(3,'재윤')],
-   ['','','','','','수연']
-  ]},
- {d:'화',dates:['11/10','11/17'],
-  t:['8:30~8:40','8:40~8:50','8:50~9:00','9:30~9:40','9:40~9:50','14:30~14:40','14:40~14:50'],
-  y:'pllllpl',
-  rows:[
-   [...rep(3,'지영'),'','',...rep(2,'지영')],
-   [...rep(5,'수연'),...rep(2,'지민')],
-   [...rep(5,'지호'),...rep(2,'찬영')],
-   [...rep(5,'민경'),...rep(2,'윤서')],
-   rep(7,'주현')
-  ]},
- {d:'수',dates:['11/11','11/18'],
-  t:['8:30~8:40','8:40~8:50','8:50~9:00','10:00~10:10','10:10~10:20','12:50~13:00','13:00~13:10','13:10~13:20'],
-  y:'pllplpll',
-  rows:[
-   rep(8,'지영'),
-   [...rep(3,'지민'),...rep(2,'승훈'),...rep(3,'수연')],
-   [...rep(5,'하원'),...rep(3,'지민')],
-   [...rep(5,'찬영'),...rep(3,'유비')],
-   [...rep(3,'승훈'),...rep(2,'금비'),...rep(3,X('은지',{'11/18':'주현'}))]
-  ]},
- {d:'목',dates:['11/12','11/19'],
-  t:['8:30~8:40','8:40~8:50','8:50~9:00','12:20~12:30','12:30~12:40','12:40~12:50'],
-  y:'plllll',
-  rows:[
-   rep(6,'지영'),
-   rep(6,'수연'),
-   [...rep(3,'윤서'),...rep(3,'지민')],
-   [...rep(3,'승훈'),...rep(3,'찬영')],
-   [...rep(3,'주현'),...rep(3,'하원')]
-  ]},
- {d:'금',dates:['11/13','11/20'],
-  t:['9:30~9:40','9:40~9:50','10:00~10:10','10:10~10:20','10:20~10:30'],
-  y:'llpll',
-  rows:[
-   rep(5,'지영'),
-   rep(5,'수연'),
-   rep(5,'지민'),
-   rep(5,'승훈'),
-   rep(5,'하원')
-  ]}
-];
+  {
+    day: "화요일",
+    dates: ["11/10", "11/17"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "9:30~9:40",
+      "9:40~9:50",
+      "14:30~14:40",
+      "14:40~14:50"
+    ],
+    places: [
+      ["-", "416 피켓"],
+      ["응용영어음운론\n701-102", "면역학\n416-109"],
+      ["기하학일반및지도\n607-109", "-"],
+      ["-", "-"],
+      ["-", "-"],
+      ["교육철학및교육사\n206-11301-1", "특수교육학개론\n422-411"],
+      ["교육학개론\n206-11301-2", "관광여가지리학\n417-510"]
+    ],
+    types: ["", "classroom", "classroom", "", "", "classroom", "classroom"],
+    staff: [
+      [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
+      [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
+      [["지영","수연","지호","민경","주현"], ["지영","수연","지호","민경","주현"]],
+      [["","수연","지호","민경","주현"], ["","수연","지호","민경","주현"]],
+      [["","수연","지호","민경","주현"], ["","수연","지호","민경","주현"]],
+      [["지영","지민","찬영","윤서","주현"], ["지영","지민","찬영","윤서","주현"]],
+      [["지영","지민","찬영","윤서","주현"], ["지영","지민","찬영","윤서","주현"]]
+    ]
+  },
 
-const MIC=[
- {date:'11/10(화)',time:'13:00~13:10',place:'제2사범관 앞',
-  n:['지영','수연','지민','재윤','찬영','승훈','민경']},
- {date:'11/18(수)',time:'16:40~16:50',place:'제1사범관 앞',
-  n:['지영','수연','지민','시현','재윤','은지','금비','서영','유비','주현','찬영','민경','지호']},
- {date:'11/23(월)',time:'13:00~13:10',place:'제1사범관 앞',
-  n:['지영','수연','지민','시현','재윤','은지','금비','서영','유비','주현','승훈','민경','지호']}
-];
+  {
+    day: "수요일",
+    dates: ["11/11", "11/18"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "10:00~10:10",
+      "10:10~10:20",
+      "12:50~13:00",
+      "13:00~13:10",
+      "13:10~13:20"
+    ],
+    places: [
+      ["701 피켓", "-"],
+      ["영어교육문법\n701-105", "309 피켓"],
+      ["일반화학\n606-209", "일반물리학\n309-403"],
+      ["의사소통장애학생교육\n422-409", "동아시아근세사교육\n418-204"],
+      ["동양한국윤리입문\n417-303", "서양사입문 417-407"],
+      ["-", "-"],
+      ["-", "-"],
+      ["아동건강교육\n211-303", "-"]
+    ],
+    types: ["picket", "classroom", "classroom", "classroom", "classroom", "", "", "classroom"],
+    staff: [
+      [["지영","지민","하원","찬영","승훈"], ["지영","지민","하원","찬영","승훈"]],
+      [["지영","지민","하원","찬영","승훈"], ["지영","지민","하원","찬영","승훈"]],
+      [["지영","지민","하원","찬영","승훈"], ["지영","지민","하원","찬영","승훈"]],
+      [["지영","승훈","하원","찬영","금비"], ["지영","승훈","하원","찬영","금비"]],
+      [["지영","승훈","하원","찬영","금비"], ["지영","승훈","하원","찬영","금비"]],
+      [["지영","수연","지민","유비","은지"], ["지영","수연","지민","유비","주현"]],
+      [["지영","수연","지민","유비","은지"], ["지영","수연","지민","유비","주현"]],
+      [["지영","수연","지민","유비","은지"], ["지영","수연","지민","유비","주현"]]
+    ]
+  },
 
-const ALL='전체';
-let who='';
-try{who=localStorage.getItem('who')||'';}catch(e){}
-let cur=(()=>{const g=new Date().getDay();return (g>=1&&g<=5)?DAYS[g-1].d:DAYS[0].d;})();
-
-const names=[...new Set([
-  ...DAYS.flatMap(d=>d.rows.flat().flatMap(allOf)),
-  ...MIC.flatMap(m=>m.n)
-].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
-if(!names.includes(who)) who='';
-
-function tableHTML(day){
-  let h='<div class="day"><h2>'+day.d+'요일 <small>'+day.dates.join(' · ')+'</small></h2><div class="wrap"><table><thead><tr><th>시간</th>';
-  day.t.forEach((t,i)=>{h+='<th class="'+day.y[i]+'">'+t+'</th>';});
-  h+='</tr></thead><tbody>';
-  day.rows.forEach((row,ri)=>{
-    h+='<tr>';
-    if(ri===0) h+='<th class="side" rowspan="'+day.rows.length+'">실무 인원</th>';
-    row.forEach(c=>{
-      const me=who&&allOf(c).includes(who);
-      let inner=base(c);
-      if(typeof c!=='string'){
-        inner+=Object.entries(c.ex||{}).map(([dt,nm])=>'<span class="ex">'+dt+' → '+nm+'</span>').join('');
-      }
-      h+='<td class="'+(me?'me':'')+'">'+inner+'</td>';
-    });
-    h+='</tr>';
-  });
-  return h+'</tbody></table></div></div>';
-}
-
-function summaryHTML(){
-  if(!who) return '';
-  let total=0;
-  let h='<div class="sum"><h3>'+who+' 님 일정</h3><ul>';
-  DAYS.forEach(day=>{
-    const groups={};
-    day.t.forEach((t,i)=>{
-      const ds=day.dates.filter(dt=>day.rows.some(r=>onDate(r[i],dt)===who));
-      if(ds.length){
-        total+=ds.length;
-        const k=ds.join(',');
-        if(!groups[k]) groups[k]={ds:ds,items:[]};
-        groups[k].items.push(t+(day.y[i]==='p'?' (피켓)':' (강의실)'));
-      }
-    });
-    Object.values(groups).forEach(g=>{
-      const tag=g.ds.length===day.dates.length?'':' <span class="dt">['+g.ds.join(', ')+']</span>';
-      h+='<li><b>'+day.d+'요일</b>'+tag+' '+g.items.join(', ')+'</li>';
-    });
-  });
-  MIC.forEach(m=>{
-    if(m.n.includes(who)) h+='<li><b>야외 마이크</b> '+m.date+' '+m.time+' '+m.place+'</li>';
-  });
-  return h+'</ul><p>요일별 유세 전체 기간 합계 '+total+'타임 (날짜별 변경 반영)</p></div>';
-}
-
-function micHTML(){
-  let h='<h2>야외 마이크 유세</h2>';
-  MIC.forEach(m=>{
-    h+='<div class="item'+(who&&m.n.includes(who)?' me':'')+'"><b>'+m.date+' '+m.time+' · '+m.place+'</b>'+
-       m.n.map(n=>n===who?'<u>'+n+'</u>':n).join(', ')+'</div>';
-  });
-  return h;
-}
-
-function render(){
-  document.getElementById('chips').innerHTML=
-    names.map(n=>'<button class="chip'+(n===who?' on':'')+'" data-n="'+n+'">'+n+'</button>').join('');
-  document.getElementById('summary').innerHTML=summaryHTML();
-  document.getElementById('tabs').innerHTML=
-    [...DAYS.map(d=>d.d),ALL].map(d=>'<button class="tab'+(d===cur?' on':'')+'" data-d="'+d+'">'+d+'</button>').join('');
-  document.getElementById('content').innerHTML=
-    DAYS.filter(d=>cur===ALL||d.d===cur).map(tableHTML).join('');
-  document.getElementById('mic').innerHTML=micHTML();
-}
-
-document.addEventListener('click',e=>{
-  const c=e.target.closest('.chip'), t=e.target.closest('.tab');
-  if(c){
-    who=(who===c.dataset.n)?'':c.dataset.n;
-    try{localStorage.setItem('who',who);}catch(err){}
-    render();
+  {
+    day: "목요일",
+    dates: ["11/12", "11/19"],
+    times: [
+      "8:30~8:40",
+      "8:40~8:50",
+      "8:50~9:00",
+      "12:20~12:30",
+      "12:30~12:40",
+      "12:40~12:50"
+    ],
+    places: [
+      ["701 피켓", "422 피켓"],
+      ["독서교육론\n701-303", "특수교육교사론\n422-411"],
+      ["현대소설론\n701-302", "인구및자원지리학\n417-510"],
+      ["-", "-"],
+      ["-", "-"],
+      ["-", "-"]
+    ],
+    types: ["picket", "classroom", "classroom", "", "", ""],
+    staff: [
+      [["지영","수연","윤서","승훈","주현"], ["지영","수연","윤서","승훈","주현"]],
+      [["지영","수연","윤서","승훈","주현"], ["지영","수연","윤서","승훈","주현"]],
+      [["지영","수연","윤서","승훈","주현"], ["지영","수연","윤서","승훈","주현"]],
+      [["지영","수연","지민","찬영","하원"], ["지영","수연","지민","찬영","하원"]],
+      [["지영","수연","지민","찬영","하원"], ["지영","수연","지민","찬영","하원"]],
+      [["지영","수연","지민","찬영","하원"], ["지영","수연","지민","찬영","하원"]]
+    ]
   }
-  if(t){cur=t.dataset.d;render();}
-});
+];
+
+const microphones = [
+  {
+    date: "11/10(화)",
+    time: "13:00~13:10",
+    place: "제2사범관 앞",
+    people: ["지영","수연","지민","재윤","찬영","승훈","민경"]
+  },
+  {
+    date: "11/18(수)",
+    time: "16:40~16:50",
+    place: "제1사범관 앞",
+    people: ["지영","수연","지민","시현","재윤","은지","금비","서영","유비","주현","찬영","민경"]
+  },
+  {
+    date: "11/23(월)",
+    time: "13:00~13:10",
+    place: "제1사범관 앞",
+    people: ["지영","수연","지민","시현","재윤","은지","금비","서영","유비","주현","승훈","민경","지호"]
+  }
+];
+
+let selected = "";
+
+try {
+  selected = localStorage.getItem("selectedPerson") || "";
+} catch (error) {}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function getPeople() {
+  const people = new Set();
+
+  schedules.forEach(day => {
+    day.staff.forEach(timeStaff => {
+      timeStaff.forEach(dateStaff => {
+        dateStaff.forEach(name => {
+          if (name) people.add(name);
+        });
+      });
+    });
+  });
+
+  microphones.forEach(item => {
+    item.people.forEach(name => people.add(name));
+  });
+
+  return [...people].sort((a, b) => a.localeCompare(b, "ko"));
+}
+
+function renderPeople() {
+  const container = document.getElementById("people");
+
+  container.innerHTML =
+    `<button data-person="">전체</button>` +
+    getPeople().map(name =>
+      `<button data-person="${escapeHTML(name)}">${escapeHTML(name)}</button>`
+    ).join("");
+
+  container.querySelectorAll("button").forEach(button => {
+    button.classList.toggle("active", button.dataset.person === selected);
+
+    button.addEventListener("click", () => {
+      selected = button.dataset.person;
+
+      try {
+        localStorage.setItem("selectedPerson", selected);
+      } catch (error) {}
+
+      render();
+    });
+  });
+}
+
+function startMinutes(time) {
+  const match = time.match(/^(\d{1,2}):(\d{2})/);
+  return match ? Number(match[1]) * 60 + Number(match[2]) : 0;
+}
+
+function renderResult() {
+  const box = document.getElementById("result");
+
+  if (!selected) {
+    box.className = "result";
+    box.innerHTML = "";
+    return;
+  }
+
+  let html = `<h2>${escapeHTML(selected)} 님 참여 일정</h2>`;
+  let hasAnySchedule = false;
+
+  schedules.forEach(day => {
+    let weekdayHTML = "";
+
+    day.dates.forEach((date, dateIndex) => {
+      const items = [];
+
+      day.times.forEach((time, timeIndex) => {
+        const place = day.places[timeIndex][dateIndex];
+        const names = day.staff[timeIndex][dateIndex] || [];
+
+        if (!place || place === "-" || !names.includes(selected)) return;
+        items.push({ time, place });
+      });
+
+      items.sort((a, b) => startMinutes(a.time) - startMinutes(b.time));
+
+      if (items.length) {
+        hasAnySchedule = true;
+        weekdayHTML += `
+          <div class="date-section">
+            <h4 class="date-title">${escapeHTML(date)}</h4>
+            ${items.map(item => `
+              <div class="result-item">
+                ${escapeHTML(item.time)} ·
+                ${escapeHTML(item.place).replace(/\n/g, " ")}
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+    });
+
+    if (weekdayHTML) {
+      html += `
+        <section class="weekday-section">
+          <h3 class="weekday-title">${escapeHTML(day.day)}</h3>
+          ${weekdayHTML}
+        </section>
+      `;
+    }
+  });
+
+  const micItems = microphones.filter(item =>
+    item.people.includes(selected)
+  );
+
+  if (micItems.length) {
+    hasAnySchedule = true;
+    html += `
+      <section class="weekday-section">
+        <h3 class="weekday-title">야외 마이크 유세</h3>
+        ${micItems.map(item => `
+          <div class="result-item">
+            <strong>${escapeHTML(item.date)}</strong> ·
+            ${escapeHTML(item.time)} · ${escapeHTML(item.place)}
+          </div>
+        `).join("")}
+      </section>
+    `;
+  }
+
+  if (!hasAnySchedule) {
+    html += "<p>표에 표시된 일정이 없습니다.</p>";
+  }
+
+  box.className = "result show";
+  box.innerHTML = html;
+}
+
+function renderDay(day) {
+  let html = `
+    <section class="day">
+      <h2>${escapeHTML(day.day)} (${day.dates.map(escapeHTML).join(" / ")})</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>시간</th>
+              ${day.times.map(time => `<th>${escapeHTML(time)}</th>`).join("")}
+            </tr>
+            <tr>
+              <th>${escapeHTML(day.dates[0])} 장소</th>
+              ${day.times.map((_, index) => {
+                const type = day.types[index] === "picket"
+                  ? "picket-cell"
+                  : day.types[index] === "classroom"
+                    ? "classroom-cell"
+                    : "";
+
+                return `<td class="${type}">${escapeHTML(day.places[index][0])}</td>`;
+              }).join("")}
+            </tr>
+            <tr>
+              <th>${escapeHTML(day.dates[1])} 장소</th>
+              ${day.times.map((_, index) => {
+                const type = day.types[index] === "picket"
+                  ? "picket-cell"
+                  : day.types[index] === "classroom"
+                    ? "classroom-cell"
+                    : "";
+
+                return `<td class="${type}">${escapeHTML(day.places[index][1])}</td>`;
+              }).join("")}
+            </tr>
+          </thead>
+          <tbody>`;
+
+  const maxRows = Math.max(
+    ...day.staff.flatMap(timeStaff =>
+      timeStaff.map(dateStaff => dateStaff.length)
+    )
+  );
+
+  for (let row = 0; row < maxRows; row++) {
+    html += `<tr><th>실무 인원 ${row + 1}</th>`;
+
+    day.staff.forEach(timeStaff => {
+      const first = timeStaff[0][row] || "";
+      const second = timeStaff[1][row] || "";
+
+      // 두 날짜 인원이 같으면 한 명만 표시.
+      // 다르면 교대 표기: 예) 주현→은지
+      let displayedName = "";
+
+      if (first && second && first === second) {
+        displayedName = first;
+      } else if (first && second) {
+        displayedName = `${first}→${second}`;
+      } else {
+        displayedName = first || second || "—";
+      }
+
+      const isSelected =
+        selected && (first === selected || second === selected);
+
+      html += `
+        <td class="${isSelected ? "selected" : ""}">
+          ${escapeHTML(displayedName)}
+        </td>
+      `;
+    });
+
+    html += "</tr>";
+  }
+
+  html += `
+          </tbody>
+        </table>
+      </div>
+      <div class="small">
+        교대 표기는 ${escapeHTML(day.dates[0])} → ${escapeHTML(day.dates[1])} 순서입니다.
+      </div>
+    </section>
+  `;
+
+  return html;
+}
+
+function renderMic() {
+  let html = "<h2>야외 마이크 유세</h2>";
+
+  microphones.forEach(item => {
+    const isSelected = selected && item.people.includes(selected);
+
+    html += `
+      <div class="mic-item ${isSelected ? "selected" : ""}">
+        <strong>
+          ${escapeHTML(item.date)} ${escapeHTML(item.time)} ·
+          ${escapeHTML(item.place)}
+        </strong><br>
+        ${item.people.map(name =>
+          name === selected
+            ? `<strong>${escapeHTML(name)}</strong>`
+            : escapeHTML(name)
+        ).join(", ")}
+      </div>
+    `;
+  });
+
+  document.getElementById("mic").innerHTML = html;
+}
+
+function render() {
+  renderPeople();
+  renderResult();
+  document.getElementById("schedules").innerHTML =
+    schedules.map(renderDay).join("");
+  renderMic();
+}
+
 render();
 </script>
 </body>
